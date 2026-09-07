@@ -5,9 +5,53 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply bg-slate-950 text-slate-100 antialiased font-sans min-h-screen selection:bg-brand-500/30 selection:text-brand-300;
+  :root {
+    --bg-primary: #ffffff;
+    --bg-surface: #f8fafc;
+    --border-subtle: #e2e8f0;
+    --text-primary: #0f172a;
+    --text-muted: #64748b;
   }
+
+  .dark {
+    --bg-primary: #020617;
+    --bg-surface: #090d16;
+    --border-subtle: #1e293b;
+    --text-primary: #f8fafc;
+    --text-muted: #94a3b8;
+  }
+
+  body {
+    @apply antialiased font-sans min-h-screen transition-colors duration-300;
+  }
+
+  .dark body {
+    @apply bg-slate-950 text-slate-100 selection:bg-brand-500/30 selection:text-brand-300;
+  }
+
+  html:not(.dark) body {
+    @apply bg-slate-50 text-slate-900 selection:bg-brand-500/20 selection:text-brand-700;
+  }
+}
+
+/* Background Patterns & Glows */
+.bg-grid-pattern {
+  background-size: 32px 32px;
+  background-image: linear-gradient(to right, rgba(148, 163, 184, 0.05) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
+}
+
+.dark .bg-grid-pattern {
+  background-image: linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                    linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+}
+
+.bg-radial-glow {
+  background: radial-gradient(circle at 50% 0%, rgba(34, 197, 94, 0.12), transparent 70%);
+}
+
+.dark .bg-radial-glow {
+  background: radial-gradient(circle at 50% 0%, rgba(34, 197, 94, 0.15), transparent 70%);
 }
 
 /* Custom scrollbar */
@@ -16,12 +60,8 @@
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #0f172a;
+  @apply bg-transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  @apply bg-slate-400/30 dark:bg-slate-700/60 rounded-full hover:bg-slate-500/50 dark:hover:bg-slate-600/80 transition;
 }
