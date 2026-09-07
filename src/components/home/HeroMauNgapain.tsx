@@ -45,8 +45,8 @@ export const HeroMauNgapain: React.FC<HeroMauNgapainProps> = ({
         <span>File diproses langsung di browser • Privasi aman tanpa akun</span>
       </div>
 
-      {/* Main Headline with subtle gradient */}
-      <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.15] mb-3 sm:mb-4 bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-700 dark:from-white dark:via-slate-100 dark:to-emerald-400 bg-clip-text text-transparent">
+      {/* Main Headline with subtle gradient and ample padding to prevent glyph clipping */}
+      <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.25] sm:leading-[1.2] pt-1.5 pb-2 sm:pt-2 sm:pb-2.5 mb-2 sm:mb-3 bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-700 dark:from-white dark:via-slate-100 dark:to-emerald-400 bg-clip-text text-transparent">
         Mau ngapain?
       </h1>
 
