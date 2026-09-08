@@ -3,7 +3,7 @@ import { IntentResult } from '../../types/ai';
 import { getToolById, CATEGORIES } from '../../engine/registry';
 import { ToolCategory } from '../../types/tool';
 import { IconRenderer } from '../common/IconRenderer';
-import { Sparkles, ArrowRight, Play, ShieldCheck, Layers, HelpCircle } from 'lucide-react';
+import { Sparkles, Play, ShieldCheck, Layers, HelpCircle } from 'lucide-react';
 import { WorkflowPlan } from '../../types/workflow';
 
 interface AIRecommendationCardProps {
@@ -25,10 +25,10 @@ export const AIRecommendationCard: React.FC<AIRecommendationCardProps> = ({
 
   return (
     <div
-      className={`w-full border rounded-3xl p-5 sm:p-7 lg:p-8 animate-slide-up space-y-5 sm:space-y-6 ${
+      className={`w-full border rounded-3xl p-5 sm:p-7 lg:p-8 animate-slide-up shadow-lg dark:shadow-2xl ${
         isUnknown
-          ? 'bg-slate-900/90 border-slate-800 shadow-xl'
-          : 'bg-gradient-to-b from-brand-950/40 to-slate-900/90 border-brand-500/30 shadow-glow'
+          ? 'bg-slate-900/95 dark:bg-slate-950/95 border-slate-800 dark:border-slate-800'
+          : 'bg-gradient-to-br from-slate-900/95 via-slate-950/95 to-emerald-950/20 dark:from-slate-950 dark:via-slate-950 dark:to-emerald-950/10 border-emerald-500/30 dark:border-emerald-500/20'
       }`}
     >
       {/* Intent Header */}
@@ -38,124 +38,136 @@ export const AIRecommendationCard: React.FC<AIRecommendationCardProps> = ({
             <span
               className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold border ${
                 isUnknown
-                  ? 'bg-slate-800 text-slate-300 border-slate-700'
-                  : 'bg-brand-500/20 text-brand-300 border-brand-500/40'
+                  ? 'bg-slate-800 text-slate-300 border-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300'
+                  : 'bg-emerald-500/20 text-emerald-300 dark:text-emerald-300 border-emerald-500/40 dark:border-emerald-500/30'
               }`}
             >
-              {isUnknown ? <HelpCircle className="w-3.5 h-3.5 text-amber-400" /> : <Sparkles className="w-3.5 h-3.5 text-brand-400" />}
-              {isUnknown ? 'Bantuan Kebutuhan' : 'Saran Cepat'}
+              <Sparkles className="w-3 h-3" />
+              {isUnknown ? 'Tidak dikenali' : 'AI Merekomendasikan'}
             </span>
-            {!isUnknown && (
-              <span className="text-xs text-slate-400 hidden sm:inline">
-                Target: <strong className="text-slate-200">{intent.matchedGoal}</strong>
+            {intent.provider === 'local-rules' && (
+              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
+                Offline / Rule-Based
               </span>
             )}
           </div>
-          <p className="text-base sm:text-lg font-bold text-white pt-1">{intent.explanation}</p>
+          <h3 className="text-lg sm:text-xl font-extrabold text-slate-800 dark:text-white leading-tight">
+            {isUnknown ? 'Aku belum yakin kamu mau ngapain' : tool?.name || workflow?.title || 'Saran Tool'}
+          </h3>
+          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+            {isUnknown
+              ? 'Coba pilih salah satu kategori di bawah atau gunakan kata kunci lain.'
+              : intent.explanation || tool?.shortDescription || workflow?.description}
+          </p>
         </div>
-
-        <div className="flex items-center gap-1 text-[11px] text-emerald-400 font-medium px-2.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/30 flex-shrink-0">
-          <ShieldCheck className="w-3.5 h-3.5" />
-          <span className="hidden md:inline">Lokal di Browser</span>
+        <div
+          className={`flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center ${
+            isUnknown
+              ? 'bg-slate-800 dark:bg-slate-800 border border-slate-700 dark:border-slate-700 text-slate-500 dark:text-slate-500'
+              : 'bg-emerald-500/20 dark:bg-emerald-500/10 border border-emerald-500/30 dark:border-emerald-500/20 text-emerald-500 dark:text-emerald-400'
+          }`}
+        >
+          {isUnknown ? <HelpCircle className="w-5 h-5 sm:w-6 sm:h-6" /> : <IconRenderer name={tool?.icon || 'FileText'} className="w-5 h-5 sm:w-6 sm:h-6" />}
         </div>
       </div>
 
-      {/* When Intent is Unknown: Category quick selectors */}
-      {isUnknown && (
-        <div className="space-y-3 pt-2 border-t border-slate-800">
-          <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-            Pilih Kategori Kebutuhan:
+      {/* Tool Action Card */}
+      {!isUnknown && tool && (
+        <button
+          type="button"
+          onClick={() => onLaunchTool(tool.id)}
+          className="w-full group mt-5 p-4 sm:p-5 rounded-2xl bg-white/90 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700/80 hover:border-emerald-500/50 dark:hover:border-emerald-500/40 text-left transition-all duration-200 hover:-translate-y-0.5 hover:shadow-lg dark:hover:shadow-2xl shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-800/60">
+                  {tool.category}
+                </span>
+                <span className="flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+                  <ShieldCheck className="w-3 h-3" /> Diproses di browser
+                </span>
+              </div>
+              <h4 className="font-bold text-slate-800 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-300 transition-colors">
+                {tool.name}
+              </h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                {tool.shortDescription}
+              </p>
+            </div>
+            <div className="p-2 rounded-xl bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+              <Play className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3">
+        </button>
+      )}
+
+      {/* Workflow Action */}
+      {!isUnknown && workflow && (
+        <button
+          type="button"
+          onClick={() => onLaunchWorkflow?.(workflow)}
+          className="w-full group mt-5 p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-slate-800 to-slate-900 dark:from-slate-800 dark:to-slate-950 hover:from-emerald-950 hover:to-slate-900 border border-slate-700 dark:border-slate-700 hover:border-emerald-500/50 dark:hover:border-emerald-500/40 text-left transition-all duration-200 hover:-translate-y-0.5 shadow-lg dark:shadow-xl shadow-slate-900/20 hover:shadow-emerald-900/10 focus:outline-none focus:ring-2 focus:ring-emerald-500/40"
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <Layers className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-500 dark:text-emerald-400">
+                  {workflow.steps.length} Langkah Otomatis
+                </span>
+              </div>
+              <h4 className="font-bold text-white group-hover:text-emerald-300 transition-colors">
+                {workflow.title}
+              </h4>
+              <p className="text-xs text-slate-400 dark:text-slate-500 line-clamp-2 leading-relaxed">
+                {workflow.description || workflow.goal}
+              </p>
+            </div>
+            <div className="p-2 rounded-xl bg-emerald-900/50 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+              <Play className="w-4 h-4 sm:w-5 sm:h-5" />
+            </div>
+          </div>
+        </button>
+      )}
+
+      {/* Categories Suggestions for unknown intents */}
+      {isUnknown && (
+        <div className="mt-5 pt-5 border-t border-slate-800 dark:border-slate-800">
+          <div className="text-xs font-semibold text-slate-500 dark:text-slate-400 mb-3">
+            Telusuri kategori lain:
+          </div>
+          <div className="flex flex-wrap gap-2">
             {CATEGORIES.map((cat) => (
               <button
                 key={cat.id}
                 type="button"
-                onClick={() => onSelectCategory && onSelectCategory(cat.id)}
-                className="p-3 sm:p-3.5 rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/80 hover:border-brand-500/50 text-left transition-all flex flex-col justify-between group focus:outline-none focus:ring-2 focus:ring-brand-500/40"
+                onClick={() => onSelectCategory?.(cat.id)}
+                className="px-3 py-1.5 rounded-lg bg-slate-800 dark:bg-slate-800 hover:bg-emerald-900/50 dark:hover:bg-emerald-900/30 text-xs text-slate-400 dark:text-slate-500 hover:text-emerald-400 dark:hover:text-emerald-300 border border-slate-700 dark:border-slate-700 hover:border-emerald-500/40 dark:hover:border-emerald-500/30 transition-all duration-150 hover:-translate-y-0.5 focus:outline-none focus:ring-1 focus:ring-emerald-500/40"
               >
-                <div className="w-8 h-8 rounded-xl bg-slate-900 border border-slate-700 flex items-center justify-center text-brand-400 mb-2 group-hover:scale-105 transition-transform">
-                  <IconRenderer name={cat.icon} className="w-4 h-4" />
-                </div>
-                <div className="font-bold text-xs text-slate-200 group-hover:text-brand-300 transition-colors">
-                  {cat.label}
-                </div>
+                {cat.label}
               </button>
             ))}
           </div>
         </div>
       )}
 
-      {/* Visual Workflow Chain (if workflow available) */}
-      {workflow && (
-        <div className="bg-slate-950/70 border border-slate-800/80 rounded-2xl p-4 sm:p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Layers className="w-4 h-4 text-brand-400" />
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
-                Alur Kerja Otomatis (Workflow)
-              </span>
-            </div>
-            <span className="text-xs text-slate-400">{workflow.steps.length} Langkah Berurutan</span>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-3">
-            {workflow.steps.map((step, idx) => {
-              const stepTool = getToolById(step.toolId);
-              return (
-                <div
-                  key={step.id}
-                  className="relative p-3 sm:p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center gap-3 text-left"
-                >
-                  <div className="w-7 h-7 rounded-lg bg-brand-500/10 text-brand-400 flex items-center justify-center font-bold text-xs flex-shrink-0">
-                    {idx + 1}
-                  </div>
-                  <div className="overflow-hidden">
-                    <div className="text-xs font-bold text-slate-200 truncate">{step.name}</div>
-                    <div className="text-[11px] text-slate-400 truncate">
-                      {stepTool?.shortDescription || 'Proses lokal'}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="flex justify-end pt-2">
-            <button
-              type="button"
-              onClick={() => onLaunchWorkflow && onLaunchWorkflow(workflow)}
-              className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-400 text-slate-950 font-bold text-xs sm:text-sm shadow-glow flex items-center justify-center gap-2 transition hover:scale-[1.01] focus:outline-none focus:ring-2 focus:ring-brand-400"
-            >
-              <Play className="w-4 h-4 fill-slate-950" /> Jalankan Alur Kerja Ini
-            </button>
-          </div>
+      {/* Confidence / Metadata Footer */}
+      <div className="mt-4 pt-4 border-t border-slate-800 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-500">
+        <span className="font-medium">
+          {isUnknown ? 'Confidence: N/A' : `Confidence: ${(intent.confidence * 100).toFixed(0)}%`}
+        </span>
+        <div className="flex items-center gap-4">
+          {intent.provider === 'openrouter' && (
+            <span className="flex items-center gap-1">
+              <Sparkles className="w-3 h-3" /> AI-powered
+            </span>
+          )}
+          <span className="flex items-center gap-1">
+            <ShieldCheck className="w-3 h-3 text-emerald-500" /> Privacy-first
+          </span>
         </div>
-      )}
-
-      {/* Single Tool Recommendation (if no workflow or tool suggested) */}
-      {!workflow && tool && (
-        <div className="p-4 sm:p-5 rounded-2xl bg-slate-950/70 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3.5">
-            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-brand-500/10 text-brand-400 border border-brand-500/20 flex items-center justify-center flex-shrink-0">
-              <IconRenderer name={tool.icon} className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="font-bold text-white text-sm sm:text-base">{tool.name}</div>
-              <div className="text-xs text-slate-400">{tool.shortDescription}</div>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => onLaunchTool(tool.id)}
-            className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-400 text-slate-950 font-bold text-xs sm:text-sm shadow-glow flex items-center justify-center gap-2 transition hover:scale-[1.01] flex-shrink-0 focus:outline-none focus:ring-2 focus:ring-brand-400"
-          >
-            <span>Buka Tool Ini</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
-        </div>
-      )}
+      </div>
     </div>
   );
 };

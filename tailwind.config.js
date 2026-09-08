@@ -40,9 +40,13 @@ export default {
         mono: ['JetBrains Mono', 'Fira Code', 'monospace']
       },
       boxShadow: {
+        'glow-sm': '0 0 15px -3px rgba(34, 197, 94, 0.2)',
         'glow': '0 0 25px -5px rgba(34, 197, 94, 0.25)',
-        'glow-lg': '0 0 35px -5px rgba(34, 197, 94, 0.35)',
+        'glow-lg': '0 0 40px -5px rgba(34, 197, 94, 0.35)',
+        'glow-cyan': '0 0 30px -5px rgba(6, 182, 212, 0.25)',
         'card': '0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03)',
+        'card-dark': '0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05)',
+        'premium': '0 20px 40px -15px rgba(0, 0, 0, 0.07), 0 0 0 1px rgba(0, 0, 0, 0.04)',
       },
       animation: {
         'pulse-subtle': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
@@ -55,7 +59,7 @@ export default {
           '100%': { opacity: '1' },
         },
         slideUp: {
-          '0%': { opacity: '0', transform: 'translateY(12px)' },
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         }
       }

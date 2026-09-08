@@ -66,7 +66,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             <img
               src={logoSrc}
               alt="FreeTools"
-              className="h-8 md:h-9 w-auto object-contain rounded-lg transition group-hover:scale-105"
+              className="h-10 md:h-11 w-auto object-contain transition group-hover:scale-105"
             />
             <span className="hidden sm:inline-block text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 ml-1">
               Local-First

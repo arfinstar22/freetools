@@ -120,10 +120,10 @@ export const Dropzone: React.FC<DropzoneProps> = ({
         onDrop={onDrop}
         onClick={() => inputRef.current?.click()}
         onKeyDown={onKeyDown}
-        className={`relative group cursor-pointer rounded-2xl border-2 border-dashed transition-all duration-200 p-6 sm:p-10 text-center flex flex-col items-center justify-center focus:outline-none focus:ring-2 focus:ring-brand-500/50 ${
+        className={`relative group cursor-pointer rounded-3xl border-2 border-dashed transition-all duration-200 p-6 sm:p-10 text-center flex flex-col items-center justify-center focus:outline-none focus:ring-2 focus:ring-emerald-500/40 backdrop-blur-sm shadow-sm ${
           isDragOver
-            ? 'border-brand-400 bg-brand-500/10 scale-[1.01] shadow-glow'
-            : 'border-slate-800 bg-slate-900/40 hover:border-slate-700 hover:bg-slate-900/70'
+            ? 'border-emerald-500 bg-emerald-500/10 scale-[1.01] shadow-glow'
+            : 'border-slate-300 dark:border-slate-800 bg-gradient-to-b from-white/90 to-slate-50/70 dark:from-slate-900/60 dark:to-slate-950/80 hover:border-emerald-500/50 dark:hover:border-emerald-500/40 hover:bg-white dark:hover:bg-slate-900/80'
         }`}
       >
         <input
@@ -136,27 +136,27 @@ export const Dropzone: React.FC<DropzoneProps> = ({
           aria-hidden="true"
         />
 
-        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-slate-800/80 border border-slate-700/80 flex items-center justify-center mb-3.5 text-brand-400 group-hover:scale-110 group-hover:text-brand-300 group-hover:border-brand-500/30 transition-transform">
+        <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-slate-800 dark:to-slate-900 border border-emerald-200 dark:border-slate-700/80 flex items-center justify-center mb-3.5 text-emerald-600 dark:text-emerald-400 group-hover:scale-105 group-hover:border-emerald-500/40 transition-all shadow-sm">
           <UploadCloud className="w-7 h-7 sm:w-8 sm:h-8" />
         </div>
 
-        <h3 className="text-base sm:text-lg font-bold text-slate-100 group-hover:text-brand-300 transition">
+        <h3 className="text-base sm:text-lg font-bold text-slate-800 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-300 transition-colors">
           {label}
         </h3>
-        <p className="text-xs sm:text-sm text-slate-400 mt-1">{sublabel}</p>
+        <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">{sublabel}</p>
 
-        <div className="mt-3.5 flex flex-wrap items-center justify-center gap-2 text-[11px] text-slate-400">
-          <span className="px-2.5 py-0.5 rounded-full bg-slate-800/80 border border-slate-700">
+        <div className="mt-3.5 flex flex-wrap items-center justify-center gap-2 text-[11px] text-slate-500 dark:text-slate-400">
+          <span className="px-2.5 py-0.5 rounded-full bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 shadow-sm">
             {multiple ? 'Bisa Banyak File Sekaligus' : 'Pilih 1 File'}
           </span>
-          <span className="px-2.5 py-0.5 rounded-full bg-slate-800/80 border border-slate-700 hidden sm:inline-block">
+          <span className="px-2.5 py-0.5 rounded-full bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 shadow-sm hidden sm:inline-block">
             Bisa paste langsung (Ctrl+V)
           </span>
         </div>
       </div>
 
       {errorMessage && (
-        <div className="mt-3 p-3 rounded-xl bg-rose-950/50 border border-rose-800/60 text-rose-300 text-xs flex items-center gap-2 animate-fade-in">
+        <div className="mt-3 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800/60 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2 animate-fade-in shadow-sm">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           <span>{errorMessage}</span>
         </div>
