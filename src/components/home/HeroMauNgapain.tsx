@@ -40,7 +40,7 @@ export const HeroMauNgapain: React.FC<HeroMauNgapainProps> = ({
   return (
     <div className="w-full flex flex-col items-center text-center pt-6 pb-10 sm:pt-12 sm:pb-14 max-w-4xl mx-auto px-4 relative">
       {/* Privacy Tag */}
-      <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-[11px] sm:text-xs font-semibold mb-5 shadow-sm dark:shadow-glow-sm backdrop-blur-sm">
+      <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 text-[11px] sm:text-xs font-semibold mb-5 shadow-sm">
         <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
         <span>File diproses langsung di browser • Privasi aman tanpa akun</span>
       </div>
@@ -60,7 +60,7 @@ export const HeroMauNgapain: React.FC<HeroMauNgapainProps> = ({
         onSubmit={handleSubmit}
         className="w-full max-w-2xl relative mb-4 group"
       >
-        <div className="relative flex items-center rounded-2xl shadow-lg dark:shadow-2xl bg-white/95 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-700/80 transition-all duration-200 group-focus-within:border-emerald-500/70 group-focus-within:ring-2 group-focus-within:ring-emerald-500/20 dark:group-focus-within:ring-emerald-400/20">
+        <div className="relative flex items-center rounded-2xl bg-white/95 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-700/80 shadow-[0_14px_36px_rgba(15,23,42,0.08)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.22)] transition-all duration-200 group-focus-within:border-emerald-500/70 group-focus-within:ring-2 group-focus-within:ring-emerald-500/20 dark:group-focus-within:ring-emerald-400/20">
           <div className="absolute left-3.5 sm:left-4 text-slate-400 dark:text-slate-500 group-focus-within:text-emerald-500 transition-colors pointer-events-none">
             <Search className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
@@ -100,7 +100,7 @@ export const HeroMauNgapain: React.FC<HeroMauNgapainProps> = ({
             key={example}
             type="button"
             onClick={() => handlePillClick(example)}
-            className="text-[11px] sm:text-xs px-2.5 py-1 rounded-xl bg-white/70 dark:bg-slate-900/60 hover:bg-emerald-50/80 dark:hover:bg-slate-800/90 text-slate-600 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-300 border border-slate-200/80 dark:border-slate-800/80 hover:border-emerald-500/30 transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 shadow-sm focus:outline-none focus:ring-1 focus:ring-emerald-500/40"
+            className="text-[11px] sm:text-xs px-2.5 py-1 rounded-xl bg-white dark:bg-slate-900 hover:bg-emerald-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-emerald-700 dark:hover:text-emerald-300 border border-slate-200 dark:border-slate-700 hover:border-emerald-500/30 transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0 shadow-[0_4px_12px_rgba(15,23,42,0.035)] focus:outline-none focus:ring-1 focus:ring-emerald-500/40"
           >
             {example}
           </button>

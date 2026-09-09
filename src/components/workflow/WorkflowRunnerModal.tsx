@@ -77,26 +77,26 @@ export const WorkflowRunnerModal: React.FC<WorkflowRunnerModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
-      <div className="w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-slide-up flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/55 dark:bg-slate-950/80 backdrop-blur-sm animate-fade-in">
+      <div className="w-full max-w-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden animate-slide-up flex flex-col max-h-[92vh]">
         {/* Modal Header */}
-        <div className="p-4 sm:p-6 border-b border-slate-800 flex items-start justify-between gap-3">
+        <div className="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800 flex items-start justify-between gap-3">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-400 bg-brand-500/10 px-2.5 py-0.5 rounded-full border border-brand-500/20">
+              <span className="inline-flex items-center gap-1 text-xs font-bold text-brand-700 dark:text-brand-400 bg-brand-500/10 px-2.5 py-0.5 rounded-full border border-brand-500/20">
                 <Layers className="w-3.5 h-3.5" /> Alur Kerja Otomatis
               </span>
-              <span className="text-[11px] text-slate-400">Lokal di Browser</span>
+              <span className="text-[11px] text-slate-600 dark:text-slate-400">Lokal di Browser</span>
             </div>
-            <h2 className="text-lg sm:text-xl font-extrabold text-white">{plan.title}</h2>
-            <p className="text-xs text-slate-400 leading-relaxed">{plan.description}</p>
+            <h2 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">{plan.title}</h2>
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">{plan.description}</p>
           </div>
 
           <button
             type="button"
             onClick={onClose}
             aria-label="Tutup alur kerja"
-            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition focus:outline-none focus:ring-2 focus:ring-slate-600 flex-shrink-0"
+            className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition focus:outline-none focus:ring-2 focus:ring-slate-600 flex-shrink-0"
           >
             <X className="w-5 h-5" />
           </button>
@@ -173,7 +173,7 @@ export const WorkflowRunnerModal: React.FC<WorkflowRunnerModalProps> = ({
 
                       <div className="min-w-0">
                         <div className="text-xs font-bold text-slate-200 truncate">{step.name}</div>
-                        <div className="text-[11px] text-slate-400 truncate">
+                        <div className="text-[11px] text-slate-600 dark:text-slate-400 truncate">
                           {status === 'running' ? 'Sedang memproses...' : 'Siap diproses'}
                         </div>
                       </div>

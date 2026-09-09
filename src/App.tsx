@@ -72,11 +72,7 @@ export function App() {
   const selectedTool = getToolById(selectedToolId) || getToolById('compress-pdf')!;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col font-sans transition-colors duration-300 relative overflow-x-hidden">
-      {/* Background ambient lighting and grid pattern layers */}
-      <div className="fixed inset-0 bg-grid-ambient pointer-events-none -z-10" />
-      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[700px] hero-glow-primary pointer-events-none -z-10" />
-
+    <div className="min-h-screen text-slate-800 dark:text-slate-100 flex flex-col font-sans transition-colors duration-300 relative overflow-x-hidden">
       {/* Offline Banner indicator */}
       {isOffline && (
         <div className="bg-amber-500/10 dark:bg-amber-500/10 border-b border-amber-500/20 text-amber-700 dark:text-amber-300 px-4 py-2 text-xs flex items-center justify-center gap-2">

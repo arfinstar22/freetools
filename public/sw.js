@@ -1,68 +1,56 @@
-const CACHE_NAME = 'freetools-v3.0';
-const STATIC_ASSETS = [
+const CACHE_NAME = 'freetools-shell-v4';
+const APP_SHELL = [
   '/',
-  '/index.html',
   '/manifest.json',
-  '/logo/freetools-logo-dark.png',
-  '/logo/freetools-logo-light.png',
   '/logo/freetools-icon.png',
   '/logo/freetools-icon-192.png',
-  '/logo/freetools-icon-512.png',
-  '/logo/favicon-32.png',
-  '/logo/favicon-16.png',
-  '/logo/freetools-og.png'
+  '/logo/freetools-icon-512.png'
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
-    })
-  );
-  self.skipWaiting();
+  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
 });
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      );
-    })
+    caches.keys().then((keys) => Promise.all(
+      keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+    ))
   );
-  self.clients.claim();
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests and ignore API / non-http calls
-  if (event.request.method !== 'GET' || !event.request.url.startsWith('http')) {
+  if (event.request.method !== 'GET' || event.request.mode === 'navigate') {
     return;
   }
 
   const url = new URL(event.request.url);
+  if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) {
+    return;
+  }
 
-  // Security guard: NEVER cache API / AI backend requests
-  if (url.pathname.startsWith('/api/') || url.pathname.includes('/ai-')) {
+  if (event.request.destination !== 'image' && event.request.destination !== 'font') {
     return;
   }
 
   event.respondWith(
     caches.match(event.request).then((cached) => {
-      const networked = fetch(event.request)
+      const network = fetch(event.request)
         .then((response) => {
-          if (response && response.status === 200 && response.type === 'basic') {
-            const cacheCopy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, cacheCopy));
+          if (response.ok) {
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, response.clone()));
           }
           return response;
         })
         .catch(() => cached);
 
-      return cached || networked;
+      return cached || network;
     })
   );
 });

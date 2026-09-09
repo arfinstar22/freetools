@@ -34,15 +34,15 @@ export class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-6 text-center">
-          <div className="max-w-md w-full p-8 rounded-3xl bg-slate-900 border border-slate-800 space-y-5 shadow-2xl animate-slide-up">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col items-center justify-center p-6 text-center">
+          <div className="max-w-md w-full p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-5 shadow-2xl animate-slide-up">
             <div className="w-14 h-14 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto text-rose-400">
               <AlertTriangle className="w-7 h-7" />
             </div>
 
             <div className="space-y-2">
-              <h1 className="text-xl font-extrabold text-white">Terjadi kendala pada tampilan</h1>
-              <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+              <h1 className="text-xl font-extrabold text-slate-900 dark:text-white">Terjadi kendala pada tampilan</h1>
+              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                 Aplikasi mengalami kendala sementara saat merender tampilan. Kamu bisa kembali ke beranda tanpa kehilangan data browser.
               </p>
             </div>

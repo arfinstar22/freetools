@@ -134,8 +134,8 @@ export const ToolRunner: React.FC<ToolRunnerProps> = ({
   return (
     <div className="max-w-4xl mx-auto px-4 py-6 sm:py-10 space-y-6 sm:space-y-8 animate-fade-in">
       {/* Breadcrumb Navigation & Top Header */}
-      <div className="space-y-3 border-b border-slate-800 pb-5 sm:pb-6">
-        <div className="flex items-center gap-2 text-xs text-slate-400">
+      <div className="space-y-3 border-b border-slate-200 dark:border-slate-800 pb-5 sm:pb-6">
+        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
           <button
             type="button"
             onClick={onBack}
@@ -144,9 +144,9 @@ export const ToolRunner: React.FC<ToolRunnerProps> = ({
             Beranda
           </button>
           <span>/</span>
-          <span className="uppercase font-semibold tracking-wider text-slate-400">{tool.category}</span>
+          <span className="uppercase font-semibold tracking-wider text-slate-500 dark:text-slate-400">{tool.category}</span>
           <span>/</span>
-          <span className="text-slate-200 font-medium truncate">{tool.name}</span>
+          <span className="text-slate-700 dark:text-slate-200 font-medium truncate">{tool.name}</span>
         </div>
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
@@ -155,7 +155,7 @@ export const ToolRunner: React.FC<ToolRunnerProps> = ({
               type="button"
               onClick={onBack}
               aria-label="Kembali ke Beranda"
-              className="mt-0.5 p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800 transition focus:outline-none focus:ring-2 focus:ring-slate-700 flex-shrink-0"
+              className="mt-0.5 p-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition focus:outline-none focus:ring-2 focus:ring-slate-700 flex-shrink-0"
               title="Kembali ke Beranda"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -170,8 +170,8 @@ export const ToolRunner: React.FC<ToolRunnerProps> = ({
                   <ShieldCheck className="w-3.5 h-3.5" /> 🔒 Diproses langsung di browser
                 </span>
               </div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white">{tool.name}</h1>
-              <p className="text-xs sm:text-sm text-slate-400 mt-1 max-w-2xl leading-relaxed">{tool.description}</p>
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-slate-900 dark:text-white">{tool.name}</h1>
+              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-2xl leading-relaxed">{tool.description}</p>
             </div>
           </div>
         </div>
@@ -200,8 +200,8 @@ export const ToolRunner: React.FC<ToolRunnerProps> = ({
 
             {/* Uploaded File List */}
             {files.length > 0 && (
-              <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-3.5 sm:p-4 space-y-2">
-                <div className="flex items-center justify-between text-xs font-semibold text-slate-400 mb-2">
+              <div className="bg-white/80 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 sm:p-4 space-y-2">
+                <div className="flex items-center justify-between text-xs font-semibold text-slate-500 dark:text-slate-400 mb-2">
                   <span>File yang dipilih ({files.length}):</span>
                   <span>Total: {formatBytes(files.reduce((a, b) => a + b.size, 0))}</span>
                 </div>
@@ -210,19 +210,19 @@ export const ToolRunner: React.FC<ToolRunnerProps> = ({
                   {files.map((file, idx) => (
                     <div
                       key={`${file.name}_${idx}`}
-                      className="flex items-center justify-between py-1.5 text-xs text-slate-300 hover:bg-slate-800/40 px-2 rounded-lg"
+                      className="flex items-center justify-between py-1.5 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-800/40 px-2 rounded-lg"
                     >
                       <div className="flex items-center gap-2 truncate">
                         <FileText className="w-4 h-4 text-brand-400 flex-shrink-0" />
                         <span className="truncate font-medium">{file.name}</span>
                       </div>
                       <div className="flex items-center gap-3 flex-shrink-0">
-                        <span className="text-slate-400">{formatBytes(file.size)}</span>
+                        <span className="text-slate-500 dark:text-slate-400">{formatBytes(file.size)}</span>
                         <button
                           type="button"
                           onClick={() => handleRemoveFile(idx)}
                           aria-label={`Hapus ${file.name}`}
-                          className="text-slate-400 hover:text-rose-400 transition p-1 focus:outline-none focus:text-rose-400"
+                          className="text-slate-500 dark:text-slate-400 hover:text-rose-400 transition p-1 focus:outline-none focus:text-rose-400"
                           title="Hapus"
                         >
                           <X className="w-3.5 h-3.5" />
@@ -239,8 +239,8 @@ export const ToolRunner: React.FC<ToolRunnerProps> = ({
         {/* Input Block: Text */}
         {tool.inputMode === 'text' && (
           <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs text-slate-400">
-              <label htmlFor="text-input" className="font-semibold text-slate-300">Masukkan Teks:</label>
+            <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <label htmlFor="text-input" className="font-semibold text-slate-700 dark:text-slate-300">Masukkan Teks:</label>
               <span>{textInput.length} karakter</span>
             </div>
             <textarea
@@ -253,15 +253,15 @@ export const ToolRunner: React.FC<ToolRunnerProps> = ({
                 setErrorMessage(null);
               }}
               placeholder="Ketik atau tempel (paste) teks kamu di sini..."
-              className="w-full p-3.5 sm:p-4 bg-slate-900 border border-slate-800 rounded-2xl text-slate-100 placeholder-slate-500 font-mono text-xs sm:text-sm focus:outline-none focus:border-brand-500/80 focus:ring-1 focus:ring-brand-500/20 transition"
+              className="w-full p-3.5 sm:p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 font-mono text-xs sm:text-sm focus:outline-none focus:border-brand-500/80 focus:ring-1 focus:ring-brand-500/20 transition"
             />
           </div>
         )}
 
         {/* Dynamic Tool Options & Form Fields */}
         {tool.optionSchemas && tool.optionSchemas.length > 0 && (
-          <div className="p-4 sm:p-5 rounded-2xl bg-slate-900/60 border border-slate-800 space-y-3.5 sm:space-y-4">
-            <div className="text-xs font-bold uppercase tracking-wider text-slate-400">
+          <div className="p-4 sm:p-5 rounded-2xl bg-white/80 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-3.5 sm:space-y-4">
+            <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Pengaturan & Input:
             </div>
 
@@ -272,14 +272,14 @@ export const ToolRunner: React.FC<ToolRunnerProps> = ({
                 if (schema.type === 'textarea') {
                   return (
                     <div key={schema.id} className="sm:col-span-2 space-y-1.5">
-                      <label htmlFor={schema.id} className="text-xs font-semibold text-slate-300">{schema.label}</label>
+                      <label htmlFor={schema.id} className="text-xs font-semibold text-slate-700 dark:text-slate-300">{schema.label}</label>
                       <textarea
                         id={schema.id}
                         rows={schema.rows || 4}
                         value={val || ''}
                         placeholder={schema.placeholder}
                         onChange={(e) => handleOptionChange(schema.id, e.target.value)}
-                        className="w-full p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono text-white placeholder-slate-500 focus:outline-none focus:border-brand-500/80 focus:ring-1 focus:ring-brand-500/20"
+                        className="w-full p-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-mono text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-brand-500/80 focus:ring-1 focus:ring-brand-500/20"
                       />
                     </div>
                   );
@@ -288,12 +288,12 @@ export const ToolRunner: React.FC<ToolRunnerProps> = ({
                 if (schema.type === 'select') {
                   return (
                     <div key={schema.id} className="space-y-1.5">
-                      <label htmlFor={schema.id} className="text-xs font-semibold text-slate-300">{schema.label}</label>
+                      <label htmlFor={schema.id} className="text-xs font-semibold text-slate-700 dark:text-slate-300">{schema.label}</label>
                       <select
                         id={schema.id}
                         value={val}
                         onChange={(e) => handleOptionChange(schema.id, e.target.value)}
-                        className="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white focus:outline-none focus:border-brand-500/80 focus:ring-1 focus:ring-brand-500/20"
+                        className="w-full px-3 py-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white focus:outline-none focus:border-brand-500/80 focus:ring-1 focus:ring-brand-500/20"
                       >
                         {schema.options?.map((opt) => (
                           <option key={opt.value} value={opt.value}>
@@ -302,7 +302,7 @@ export const ToolRunner: React.FC<ToolRunnerProps> = ({
                         ))}
                       </select>
                       {schema.description && (
-                        <p className="text-[11px] text-slate-400">{schema.description}</p>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">{schema.description}</p>
                       )}
                     </div>
                   );
@@ -316,9 +316,9 @@ export const ToolRunner: React.FC<ToolRunnerProps> = ({
                         id={schema.id}
                         checked={Boolean(val)}
                         onChange={(e) => handleOptionChange(schema.id, e.target.checked)}
-                        className="w-4 h-4 rounded text-brand-500 focus:ring-brand-400 border-slate-700 bg-slate-950 cursor-pointer"
+                        className="w-4 h-4 rounded text-brand-500 focus:ring-brand-400 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-950 cursor-pointer"
                       />
-                      <label htmlFor={schema.id} className="text-xs font-medium text-slate-300 cursor-pointer">
+                      <label htmlFor={schema.id} className="text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
                         {schema.label}
                       </label>
                     </div>
@@ -327,14 +327,14 @@ export const ToolRunner: React.FC<ToolRunnerProps> = ({
 
                 return (
                   <div key={schema.id} className="space-y-1.5">
-                    <label htmlFor={schema.id} className="text-xs font-semibold text-slate-300">{schema.label}</label>
+                    <label htmlFor={schema.id} className="text-xs font-semibold text-slate-700 dark:text-slate-300">{schema.label}</label>
                     <input
                       id={schema.id}
                       type={schema.type === 'number' ? 'number' : 'text'}
                       value={val !== undefined ? val : ''}
                       placeholder={schema.placeholder}
                       onChange={(e) => handleOptionChange(schema.id, e.target.value)}
-                      className="w-full px-3 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-xs text-white placeholder-slate-500 focus:outline-none focus:border-brand-500/80 focus:ring-1 focus:ring-brand-500/20"
+                      className="w-full px-3 py-2.5 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-500 focus:outline-none focus:border-brand-500/80 focus:ring-1 focus:ring-brand-500/20"
                     />
                   </div>
                 );
@@ -367,12 +367,12 @@ export const ToolRunner: React.FC<ToolRunnerProps> = ({
 
         {/* Progress Bar */}
         {isProcessing && progress && (
-          <div className="p-4 sm:p-5 rounded-2xl bg-slate-900 border border-slate-800 space-y-2 animate-fade-in">
-            <div className="flex items-center justify-between text-xs text-slate-300">
-              <span className="font-semibold text-brand-400">{progress.message || 'Lagi diproses...'}</span>
+          <div className="p-4 sm:p-5 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 animate-fade-in">
+            <div className="flex items-center justify-between text-xs text-slate-700 dark:text-slate-300">
+              <span className="font-semibold text-brand-700 dark:text-brand-400">{progress.message || 'Lagi diproses...'}</span>
               <span>{progress.percentage}%</span>
             </div>
-            <div className="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+            <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-brand-500 to-emerald-400 transition-all duration-300"
                 style={{ width: `${progress.percentage}%` }}
@@ -383,12 +383,12 @@ export const ToolRunner: React.FC<ToolRunnerProps> = ({
 
         {/* Error Notification */}
         {errorMessage && (
-          <div className="p-4 sm:p-5 rounded-2xl bg-rose-950/60 border border-rose-800 text-rose-200 text-xs sm:text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-shake">
+          <div className="p-4 sm:p-5 rounded-2xl bg-rose-50 dark:bg-rose-950/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-200 text-xs sm:text-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-shake">
             <div className="flex items-start gap-2.5">
               <AlertCircle className="w-5 h-5 text-rose-400 flex-shrink-0 mt-0.5" />
               <div className="space-y-0.5">
-                <div className="font-bold text-rose-300">Terjadi masalah saat memproses file.</div>
-                <p className="text-slate-300">{errorMessage}</p>
+                <div className="font-bold text-rose-700 dark:text-rose-300">Terjadi masalah saat memproses file.</div>
+                <p className="text-slate-700 dark:text-slate-300">{errorMessage}</p>
               </div>
             </div>
             <button
@@ -403,13 +403,13 @@ export const ToolRunner: React.FC<ToolRunnerProps> = ({
 
         {/* Result Area */}
         {result && result.success && (
-          <div className="p-5 sm:p-7 lg:p-8 rounded-3xl bg-slate-900/90 border border-emerald-500/40 shadow-glow space-y-5 sm:space-y-6 animate-slide-up">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-slate-800 pb-4 sm:pb-5">
+          <div className="p-5 sm:p-7 lg:p-8 rounded-3xl bg-white/90 dark:bg-slate-900/90 border border-emerald-500/40 shadow-glow space-y-5 sm:space-y-6 animate-slide-up">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 border-b border-slate-200 dark:border-slate-800 pb-4 sm:pb-5">
               <div className="space-y-1">
                 <div className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400">
                   <FileCheck2 className="w-4 h-4" /> Berhasil!
                 </div>
-                <h3 className="text-lg sm:text-xl font-extrabold text-white">{result.message || 'File berhasil diproses!'}</h3>
+                <h3 className="text-lg sm:text-xl font-extrabold text-slate-900 dark:text-white">{result.message || 'File berhasil diproses!'}</h3>
               </div>
 
               {/* Stats Savings Badge */}
@@ -430,7 +430,7 @@ export const ToolRunner: React.FC<ToolRunnerProps> = ({
               {/* Text Output Preview (if tool outputs text) */}
               {result.items[0]?.textOutput && (
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs text-slate-400">
+                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                     <span>Hasil Keluaran:</span>
                     <button
                       type="button"
@@ -441,7 +441,7 @@ export const ToolRunner: React.FC<ToolRunnerProps> = ({
                       <span>{copied ? 'Tersalin!' : 'Salin ke Clipboard'}</span>
                     </button>
                   </div>
-                  <pre className="p-3.5 sm:p-4 rounded-2xl bg-slate-950 border border-slate-800 text-slate-200 text-xs font-mono overflow-x-auto max-h-80 whitespace-pre-wrap">
+                  <pre className="p-3.5 sm:p-4 rounded-2xl bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-200 text-xs font-mono overflow-x-auto max-h-80 whitespace-pre-wrap">
                     {result.items[0].textOutput}
                   </pre>
                 </div>

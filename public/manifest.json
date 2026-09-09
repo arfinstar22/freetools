@@ -1,13 +1,13 @@
 {
-  "name": "FreeTools — Workspace Utilitas Gratis & Privacy-First",
+  "name": "FreeTools",
   "short_name": "FreeTools",
-  "description": "Utility workspace gratis & privacy-first. Olah PDF, gambar, teks, dan data langsung di browser tanpa upload ke server.",
+  "description": "Utility workspace gratis & privacy-first untuk PDF, gambar, teks, dan data yang diproses langsung di browser.",
+  "id": "/",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "orientation": "portrait-primary",
-  "background_color": "#09090b",
-  "theme_color": "#09090b",
+  "background_color": "#071018",
+  "theme_color": "#071018",
   "icons": [
     {
       "src": "/logo/freetools-icon-192.png",

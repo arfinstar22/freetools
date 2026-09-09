@@ -120,10 +120,10 @@ export const Dropzone: React.FC<DropzoneProps> = ({
         onDrop={onDrop}
         onClick={() => inputRef.current?.click()}
         onKeyDown={onKeyDown}
-        className={`relative group cursor-pointer rounded-3xl border-2 border-dashed transition-all duration-200 p-6 sm:p-10 text-center flex flex-col items-center justify-center focus:outline-none focus:ring-2 focus:ring-emerald-500/40 backdrop-blur-sm shadow-sm ${
+        className={`relative group cursor-pointer rounded-3xl border-2 border-dashed transition-all duration-200 p-6 sm:p-10 text-center flex flex-col items-center justify-center focus:outline-none focus:ring-2 focus:ring-emerald-500/40 shadow-sm ${
           isDragOver
             ? 'border-emerald-500 bg-emerald-500/10 scale-[1.01] shadow-glow'
-            : 'border-slate-300 dark:border-slate-800 bg-gradient-to-b from-white/90 to-slate-50/70 dark:from-slate-900/60 dark:to-slate-950/80 hover:border-emerald-500/50 dark:hover:border-emerald-500/40 hover:bg-white dark:hover:bg-slate-900/80'
+            : 'border-slate-200 dark:border-slate-700/80 bg-gradient-to-b from-white to-slate-50/90 dark:from-slate-900/95 dark:to-slate-950/90 hover:border-emerald-500/50 dark:hover:border-emerald-500/40 hover:bg-white/90 dark:hover:bg-slate-900/80 shadow-[0_12px_32px_rgba(15,23,42,0.055)] dark:shadow-[0_14px_34px_rgba(0,0,0,0.16)]'
         }`}
       >
         <input
