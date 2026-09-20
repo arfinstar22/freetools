@@ -1,5 +1,6 @@
 import { ToolDefinition, ProcessContext, ProcessResult, ProcessedItem } from '../../types/tool';
 import { createZipFromFiles } from '../../utils/download';
+import { encodeBmp } from '../../utils/image-encoders';
 
 const MAX_CANVAS_DIM = 16384;
 
@@ -7,7 +8,7 @@ export const imageCompressTool: ToolDefinition = {
   id: 'image-compress',
   name: 'Kompres Gambar',
   shortDescription: 'Kecilkan ukuran file JPG, PNG, WEBP dengan kontrol persen kualitas',
-  description: 'Kompres gambar secara instan langsung di browsermu dengan pengaturan persentase presisi. Menjaga transparansi, ketajaman visual, dan privasi 100%.',
+  description: 'Kompres gambar secara instan langsung di browsermu dengan mempertahankan format asli (PNG tetap PNG, JPG tetap JPG). Menjaga transparansi, ketajaman visual, dan privasi 100%.',
   category: 'image',
   acceptedTypes: ['image/jpeg', 'image/png', 'image/webp', '.jpg', '.jpeg', '.png', '.webp', '.bmp', '.gif'],
   inputMode: 'multi-file',
@@ -28,6 +29,18 @@ export const imageCompressTool: ToolDefinition = {
       max: 95,
       step: 5,
       unit: '%'
+    },
+    {
+      id: 'outputFormat',
+      label: 'Format File Hasil',
+      type: 'select',
+      defaultValue: 'original',
+      options: [
+        { label: 'Format Asli (PNG tetap PNG, JPG tetap JPG)', value: 'original' },
+        { label: 'Ubah ke JPG (Kompatibilitas Standar)', value: 'image/jpeg' },
+        { label: 'Ubah ke PNG (Mendukung Transparansi)', value: 'image/png' },
+        { label: 'Ubah ke WEBP (Ukuran Paling Ringan)', value: 'image/webp' }
+      ]
     },
     {
       id: 'qualityPreset',
@@ -61,7 +74,7 @@ export const imageCompressTool: ToolDefinition = {
       throw new Error('Pilih minimal 1 gambar untuk dikompres.');
     }
 
-    // Resolve quality: range slider takes priority if explicitly set/different from default or when passed
+    // Resolve quality: range slider takes priority if explicitly set or numeric
     let quality = 0.75;
     const rawQualityPercent = context.options?.qualityPercent;
     if (typeof rawQualityPercent === 'number' || (typeof rawQualityPercent === 'string' && !isNaN(Number(rawQualityPercent)))) {
@@ -74,6 +87,7 @@ export const imageCompressTool: ToolDefinition = {
       else quality = 0.75;
     }
 
+    const chosenFormat = context.options?.outputFormat || 'original';
     const maxDimStr = context.options?.maxDimension || 'original';
     const maxDim = maxDimStr === 'original' ? 0 : parseInt(maxDimStr, 10);
 
@@ -98,11 +112,40 @@ export const imageCompressTool: ToolDefinition = {
         continue;
       }
 
+      // Determine output MIME type and file extension based on user preference or original format
+      const extMatch = file.name.match(/\.([a-zA-Z0-9]+)$/);
+      const rawExt = extMatch ? extMatch[1].toLowerCase() : '';
+
+      let outputMime = file.type || 'image/jpeg';
+      let ext = rawExt || 'jpg';
+
+      if (chosenFormat === 'original') {
+        if (rawExt === 'png' || file.type === 'image/png') {
+          outputMime = 'image/png';
+          ext = 'png';
+        } else if (rawExt === 'webp' || file.type === 'image/webp') {
+          outputMime = 'image/webp';
+          ext = 'webp';
+        } else if (rawExt === 'bmp' || file.type === 'image/bmp') {
+          outputMime = 'image/bmp';
+          ext = 'bmp';
+        } else if (rawExt === 'avif' || file.type === 'image/avif') {
+          outputMime = 'image/avif';
+          ext = 'avif';
+        } else {
+          outputMime = 'image/jpeg';
+          ext = rawExt === 'jpeg' ? 'jpeg' : 'jpg';
+        }
+      } else {
+        outputMime = chosenFormat;
+        ext = chosenFormat === 'image/png' ? 'png' : chosenFormat === 'image/webp' ? 'webp' : 'jpg';
+      }
+
       if (context.onProgress) {
         context.onProgress({
           current: i + 1,
           total: files.length,
-          message: `Mengompres ${file.name} (${i + 1}/${files.length}) kualitas ${Math.round(quality * 100)}%...`,
+          message: `Mengompres ${file.name} (${i + 1}/${files.length}) format .${ext.toUpperCase()}...`,
           percentage: Math.round(((i + 1) / files.length) * 90)
         });
       }
@@ -149,16 +192,13 @@ export const imageCompressTool: ToolDefinition = {
         const canvas = document.createElement('canvas');
         canvas.width = w;
         canvas.height = h;
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
         if (!ctx) throw new Error('Canvas 2D tidak didukung browser.');
 
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
 
-        const isPng = file.type === 'image/png' || file.name.toLowerCase().endsWith('.png');
-        const outputMime = isPng ? 'image/webp' : 'image/jpeg';
-
-        if (outputMime === 'image/jpeg') {
+        if (outputMime === 'image/jpeg' || outputMime === 'image/bmp') {
           ctx.fillStyle = '#ffffff';
           ctx.fillRect(0, 0, w, h);
         } else {
@@ -166,19 +206,43 @@ export const imageCompressTool: ToolDefinition = {
         }
         ctx.drawImage(img, 0, 0, w, h);
 
-        const blob = await new Promise<Blob>((resolve, reject) => {
-          canvas.toBlob(
-            (b) => {
-              if (b) resolve(b);
-              else reject(new Error(`Gagal mengompres gambar ${file.name}`));
-            },
-            outputMime,
-            quality
-          );
-        });
+        // For PNG, perform slight color step quantization when quality is reduced
+        // This preserves pure PNG format while enabling DEFLATE to compress significantly
+        if (outputMime === 'image/png' && quality < 0.95) {
+          try {
+            const step = quality <= 0.35 ? 16 : quality <= 0.6 ? 8 : quality <= 0.8 ? 4 : 2;
+            const imgData = ctx.getImageData(0, 0, w, h);
+            const d = imgData.data;
+            for (let p = 0; p < d.length; p += 4) {
+              if (d[p + 3] > 0) {
+                d[p] = Math.min(255, Math.round(d[p] / step) * step);
+                d[p + 1] = Math.min(255, Math.round(d[p + 1] / step) * step);
+                d[p + 2] = Math.min(255, Math.round(d[p + 2] / step) * step);
+              }
+            }
+            ctx.putImageData(imgData, 0, 0);
+          } catch {
+            // Safe fallback if getImageData fails
+          }
+        }
 
-        const dataUrl = canvas.toDataURL(outputMime, quality);
-        const ext = outputMime === 'image/webp' ? 'webp' : 'jpg';
+        let blob: Blob;
+        if (outputMime === 'image/bmp') {
+          blob = encodeBmp(canvas);
+        } else {
+          blob = await new Promise<Blob>((resolve, reject) => {
+            canvas.toBlob(
+              (b) => {
+                if (b) resolve(b);
+                else reject(new Error(`Gagal mengompres gambar ${file.name}`));
+              },
+              outputMime,
+              quality
+            );
+          });
+        }
+
+        const dataUrl = canvas.toDataURL(outputMime === 'image/bmp' ? 'image/png' : outputMime, quality);
         const cleanBase = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
         const finalName = `${cleanBase}_compressed.${ext}`;
 
@@ -218,7 +282,7 @@ export const imageCompressTool: ToolDefinition = {
       return {
         success: true,
         message: savedPercentage > 0
-          ? `Selesai! Berhasil menghemat ${savedPercentage}% ukuran gambar (Kualitas: ${qPctDisplay}%).${failureNote}`
+          ? `Selesai! Berhasil menghemat ${savedPercentage}% ukuran gambar (${processedItems[0].name.split('.').pop()?.toUpperCase()} • Kualitas: ${qPctDisplay}%).${failureNote}`
           : `Gambar berhasil dioptimalkan pada kualitas ${qPctDisplay}%!${failureNote}`,
         downloadName: processedItems[0].name,
         items: processedItems,

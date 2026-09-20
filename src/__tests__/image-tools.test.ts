@@ -24,6 +24,7 @@ describe('Image Tools Audit & Verification (Task 2)', () => {
       expect(imageCompressTool.supportsBatch).toBe(true);
       expect(imageCompressTool.supportsWorkflow).toBe(true);
       expect(imageCompressTool.optionSchemas?.some((s) => s.id === 'qualityPreset')).toBe(true);
+      expect(imageCompressTool.optionSchemas?.some((s) => s.id === 'outputFormat')).toBe(true);
     });
   });
 
