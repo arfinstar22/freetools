@@ -45,7 +45,12 @@ export const jwtDecoderTool: ToolDefinition = {
           default:
             throw new Error('Base64url string rusak');
         }
-        return decodeURIComponent(escape(atob(output)));
+        const binary = atob(output);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        return new TextDecoder().decode(bytes);
       };
 
       const headerJson = JSON.parse(decodeBase64Url(parts[0]));

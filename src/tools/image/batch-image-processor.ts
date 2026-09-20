@@ -9,7 +9,7 @@ export const batchImageProcessorTool: ToolDefinition = {
   shortDescription: 'Resize, kompres, rename puluhan gambar sekaligus jadi ZIP',
   description: 'Proses puluhan hingga ratusan gambar dalam satu kali klik. Cocok untuk dokumentasi acara, katalog produk, atau arsip kantor.',
   category: 'image',
-  acceptedTypes: ['image/jpeg', 'image/png', 'image/webp', '.jpg', '.jpeg', '.png', '.webp'],
+  acceptedTypes: ['image/jpeg', 'image/png', 'image/webp', '.jpg', '.jpeg', '.png', '.webp', '.bmp', '.gif', '.avif'],
   inputMode: 'multi-file',
   icon: 'Package',
   popular: true,
@@ -76,7 +76,7 @@ export const batchImageProcessorTool: ToolDefinition = {
         continue;
       }
 
-      if (!file.name.match(/\.(jpg|jpeg|png|webp|bmp|gif)$/i) && (!file.type || !file.type.startsWith('image/'))) {
+      if (!file.name.match(/\.(jpg|jpeg|png|webp|bmp|gif|avif)$/i) && (!file.type || !file.type.startsWith('image/'))) {
         failedFiles.push(file.name);
         continue;
       }

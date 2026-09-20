@@ -269,6 +269,80 @@ export const ToolRunner: React.FC<ToolRunnerProps> = ({
               {tool.optionSchemas.map((schema) => {
                 const val = options[schema.id] !== undefined ? options[schema.id] : schema.defaultValue;
 
+                if (schema.type === 'range') {
+                  const min = schema.min ?? 0;
+                  const max = schema.max ?? 100;
+                  const step = schema.step ?? 1;
+                  const numVal = Number(val ?? schema.defaultValue ?? 50);
+
+                  const presets =
+                    schema.id.toLowerCase().includes('percent') ||
+                    schema.id.toLowerCase().includes('quality') ||
+                    schema.id.toLowerCase().includes('compression')
+                      ? [
+                          { label: 'Ekstrem', value: 25 },
+                          { label: 'Hemat', value: 50 },
+                          { label: 'Seimbang', value: 75 },
+                          { label: 'Maksimal', value: 90 }
+                        ]
+                      : [];
+
+                  return (
+                    <div
+                      key={schema.id}
+                      className="sm:col-span-2 space-y-2.5 p-3.5 rounded-xl bg-slate-50/70 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80"
+                    >
+                      <div className="flex items-center justify-between">
+                        <label htmlFor={schema.id} className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                          {schema.label}
+                        </label>
+                        <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-brand-500/15 text-brand-700 dark:text-brand-400 border border-brand-500/30 font-mono shadow-sm">
+                          {numVal}{schema.unit || ''}
+                        </span>
+                      </div>
+
+                      <div className="relative flex items-center gap-3">
+                        <span className="text-[11px] font-mono text-slate-400">{min}{schema.unit || ''}</span>
+                        <input
+                          id={schema.id}
+                          type="range"
+                          min={min}
+                          max={max}
+                          step={step}
+                          value={numVal}
+                          onChange={(e) => handleOptionChange(schema.id, Number(e.target.value))}
+                          className="w-full h-2 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer accent-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                        />
+                        <span className="text-[11px] font-mono text-slate-400">{max}{schema.unit || ''}</span>
+                      </div>
+
+                      {presets.length > 0 && (
+                        <div className="flex flex-wrap items-center gap-1.5 pt-0.5">
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Pilihan cepat:</span>
+                          {presets.map((preset) => (
+                            <button
+                              key={preset.value}
+                              type="button"
+                              onClick={() => handleOptionChange(schema.id, preset.value)}
+                              className={`text-[11px] px-2 py-0.5 rounded-md font-semibold transition ${
+                                numVal === preset.value
+                                  ? 'bg-brand-500 text-slate-950 shadow-sm'
+                                  : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700'
+                              }`}
+                            >
+                              {preset.value}{schema.unit || ''} ({preset.label})
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {schema.description && (
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">{schema.description}</p>
+                      )}
+                    </div>
+                  );
+                }
+
                 if (schema.type === 'textarea') {
                   return (
                     <div key={schema.id} className="sm:col-span-2 space-y-1.5">

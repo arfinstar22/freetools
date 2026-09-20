@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import type { Plugin } from 'vite';
-import { handleAIIntentRequest } from './api/ai-intent';
+import { handleAIIntentRequest } from './api/ai-intent.ts';
 
 function aiGatewayDevPlugin(): Plugin {
   return {

@@ -13,7 +13,7 @@ export function classifyFile(file: File): ClassifiedFile {
     category = 'pdf';
   } else if (
     mime.startsWith('image/') ||
-    ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'svg', 'ico', 'tiff'].includes(ext)
+    ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp', 'svg', 'ico', 'tiff', 'tif', 'avif'].includes(ext)
   ) {
     category = 'image';
   } else if (

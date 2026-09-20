@@ -9,7 +9,7 @@ export const removeMetadataTool: ToolDefinition = {
   shortDescription: 'Hapus data lokasi GPS, jenis kamera, dan privasi foto',
   description: 'Bersihkan metadata tersembunyi seperti koordinat GPS lokasi rumah, jenis HP/kamera, dan waktu pengambilan sebelum foto diunggah ke internet.',
   category: 'image',
-  acceptedTypes: ['image/jpeg', 'image/png', 'image/webp', '.jpg', '.jpeg', '.png', '.webp'],
+  acceptedTypes: ['image/jpeg', 'image/png', 'image/webp', '.jpg', '.jpeg', '.png', '.webp', '.bmp', '.gif', '.avif'],
   inputMode: 'multi-file',
   icon: 'ShieldCheck',
   popular: false,
@@ -54,7 +54,7 @@ export const removeMetadataTool: ToolDefinition = {
         continue;
       }
 
-      if (!file.name.match(/\.(jpg|jpeg|png|webp|bmp|gif)$/i) && (!file.type || !file.type.startsWith('image/'))) {
+      if (!file.name.match(/\.(jpg|jpeg|png|webp|bmp|gif|avif)$/i) && (!file.type || !file.type.startsWith('image/'))) {
         failedFiles.push(file.name);
         continue;
       }

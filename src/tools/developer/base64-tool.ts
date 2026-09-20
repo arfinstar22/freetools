@@ -36,15 +36,24 @@ export const base64Tool: ToolDefinition = {
 
     if (mode === 'encode') {
       try {
-        // UTF-8 safe encode
-        output = btoa(unescape(encodeURIComponent(input)));
+        const bytes = new TextEncoder().encode(input);
+        let binary = '';
+        const len = bytes.byteLength;
+        for (let i = 0; i < len; i++) {
+          binary += String.fromCharCode(bytes[i]);
+        }
+        output = btoa(binary);
       } catch (err: any) {
         throw new Error(`Gagal mengenkode teks: ${err.message}`);
       }
     } else {
       try {
-        // UTF-8 safe decode
-        output = decodeURIComponent(escape(atob(input)));
+        const binary = atob(input);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        output = new TextDecoder().decode(bytes);
       } catch {
         throw new Error('Format Base64 tidak valid atau string rusak.');
       }

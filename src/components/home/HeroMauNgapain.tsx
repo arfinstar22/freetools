@@ -46,7 +46,7 @@ export const HeroMauNgapain: React.FC<HeroMauNgapainProps> = ({
       </div>
 
       {/* Main Headline with sophisticated subtle gradient and ample headroom to prevent any glyph clipping */}
-      <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.25] sm:leading-[1.2] py-2 px-1 mb-2 sm:mb-3 bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-700 dark:from-white dark:via-slate-100 dark:to-emerald-300 bg-clip-text text-transparent select-none">
+      <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.25] sm:leading-[1.2] py-2 px-1 mb-2 sm:mb-3 bg-gradient-to-r from-slate-900 via-emerald-800 to-emerald-600 dark:from-white dark:via-emerald-100 dark:to-emerald-400 bg-clip-text text-transparent select-none">
         Mau ngapain?
       </h1>
 
@@ -60,8 +60,9 @@ export const HeroMauNgapain: React.FC<HeroMauNgapainProps> = ({
         onSubmit={handleSubmit}
         className="w-full max-w-2xl relative mb-4 group"
       >
-        <div className="relative flex items-center rounded-2xl bg-white/95 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-700/80 shadow-[0_14px_36px_rgba(15,23,42,0.08)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.22)] transition-all duration-200 group-focus-within:border-emerald-500/70 group-focus-within:ring-2 group-focus-within:ring-emerald-500/20 dark:group-focus-within:ring-emerald-400/20">
-          <div className="absolute left-3.5 sm:left-4 text-slate-400 dark:text-slate-500 group-focus-within:text-emerald-500 transition-colors pointer-events-none">
+        <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500/20 via-brand-400/15 to-emerald-500/20 rounded-3xl blur-lg opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none" />
+        <div className="relative flex items-center rounded-2xl bg-white/95 dark:bg-[#0a0f1d]/95 border border-slate-200/90 dark:border-emerald-500/25 shadow-[0_14px_36px_rgba(15,23,42,0.08)] dark:shadow-[0_16px_40px_rgba(0,0,0,0.4)] transition-all duration-200 group-focus-within:border-emerald-400 group-focus-within:ring-2 group-focus-within:ring-emerald-500/20 dark:group-focus-within:ring-emerald-400/25">
+          <div className="absolute left-3.5 sm:left-4 text-slate-400 dark:text-slate-500 group-focus-within:text-emerald-400 transition-colors pointer-events-none">
             <Search className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
 

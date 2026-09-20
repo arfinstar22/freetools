@@ -1,22 +1,50 @@
 import { ToolDefinition, ProcessContext, ProcessResult, ProcessedItem } from '../../types/tool';
 import { createZipFromFiles } from '../../utils/download';
+import { encodeBmp, encodeIco, encodeTiff, encodeSvg, encodeAvif } from '../../utils/image-encoders';
 
 const MAX_CANVAS_DIM = 16384;
 
 export const imageConvertTool: ToolDefinition = {
   id: 'image-convert',
   name: 'Ubah Format Gambar',
-  shortDescription: 'Konversi format gambar ke JPG, PNG, atau WEBP',
-  description: 'Ubah format gambar apapun (JPG, PNG, WEBP, BMP) secara cepat tanpa menurunkan ketajaman visual.',
+  shortDescription: 'Konversi format gambar ke WEBP, JPG, PNG, AVIF, BMP, ICO, GIF, TIFF, SVG',
+  description: 'Ubah format gambar apapun secara cepat tanpa server dan tanpa batasan. Tersedia 9 format populer termasuk Favicon ICO, AVIF, dan TIFF.',
   category: 'image',
-  acceptedTypes: ['image/*', '.jpg', '.jpeg', '.png', '.webp', '.bmp', '.gif'],
+  acceptedTypes: [
+    'image/*',
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.webp',
+    '.bmp',
+    '.gif',
+    '.ico',
+    '.tiff',
+    '.tif',
+    '.avif',
+    '.svg'
+  ],
   inputMode: 'multi-file',
   icon: 'RefreshCw',
   popular: true,
   localProcessing: true,
   supportsBatch: true,
   supportsWorkflow: true,
-  keywords: ['convert image', 'ubah format gambar', 'jpg to png', 'png to jpg', 'webp to jpg', 'jpg to webp', 'format foto'],
+  keywords: [
+    'convert image',
+    'ubah format gambar',
+    'jpg to png',
+    'png to jpg',
+    'webp to jpg',
+    'jpg to webp',
+    'format foto',
+    'png to ico',
+    'bikin favicon',
+    'jpg to bmp',
+    'convert tiff',
+    'avif to jpg',
+    'convert avif'
+  ],
   optionSchemas: [
     {
       id: 'targetFormat',
@@ -24,20 +52,41 @@ export const imageConvertTool: ToolDefinition = {
       type: 'select',
       defaultValue: 'image/webp',
       options: [
-        { label: 'WEBP (Format Modern Paling Ringan)', value: 'image/webp' },
-        { label: 'JPG (Kompatibilitas Standar)', value: 'image/jpeg' },
-        { label: 'PNG (Mendukung Transparansi)', value: 'image/png' }
+        { label: 'WEBP (Format Modern Paling Ringan & Efisien)', value: 'image/webp' },
+        { label: 'JPG / JPEG (Kompatibilitas Standar Universal)', value: 'image/jpeg' },
+        { label: 'PNG (Mendukung Transparansi & Detail Tajam)', value: 'image/png' },
+        { label: 'AVIF (Rasio Kompresi Generasi Baru)', value: 'image/avif' },
+        { label: 'BMP (Bitmap Windows Murni Tanpa Kompresi)', value: 'image/bmp' },
+        { label: 'ICO (Favicon Web & Desktop Multi-Ukuran)', value: 'image/x-icon' },
+        { label: 'GIF (Grafis Web Kompatibilitas Tinggi)', value: 'image/gif' },
+        { label: 'TIFF (Format Arsip & Percetakan Berkualitas)', value: 'image/tiff' },
+        { label: 'SVG (Vector Container Wrapper)', value: 'image/svg+xml' }
       ]
     },
     {
       id: 'quality',
-      label: 'Kualitas Output',
+      label: 'Kualitas Output (%)',
+      description: 'Hanya berlaku untuk format berbasis kompresi (JPG, WEBP, AVIF).',
+      type: 'range',
+      defaultValue: 90,
+      min: 10,
+      max: 100,
+      step: 5,
+      unit: '%'
+    },
+    {
+      id: 'icoSize',
+      label: 'Ukuran Resolusi Favicon (Khusus Format ICO)',
       type: 'select',
-      defaultValue: '0.9',
+      defaultValue: '32',
       options: [
-        { label: 'Maksimal (95%)', value: '0.95' },
-        { label: 'Tinggi (90% - Direkomendasikan)', value: '0.9' },
-        { label: 'Sedang (80%)', value: '0.8' }
+        { label: '32x32 px (Standar Favicon Browser)', value: '32' },
+        { label: '16x16 px (Favicon Tab Klasik)', value: '16' },
+        { label: '48x48 px (Ikon Desktop Windows)', value: '48' },
+        { label: '64x64 px (Ikon Resolusi Tinggi)', value: '64' },
+        { label: '128x128 px (Ikon HD)', value: '128' },
+        { label: '256x256 px (Maksimal ICO Windows)', value: '256' },
+        { label: 'Pertahankan Resolusi Asli', value: 'original' }
       ]
     }
   ],
@@ -50,8 +99,30 @@ export const imageConvertTool: ToolDefinition = {
     }
 
     const targetFormat = context.options?.targetFormat || 'image/webp';
-    const quality = parseFloat(context.options?.quality || '0.9') || 0.9;
-    const ext = targetFormat === 'image/webp' ? 'webp' : targetFormat === 'image/jpeg' ? 'jpg' : 'png';
+    const rawQuality = context.options?.quality;
+    let quality = 0.9;
+    if (typeof rawQuality === 'number' || (typeof rawQuality === 'string' && !isNaN(Number(rawQuality)))) {
+      const qVal = Number(rawQuality);
+      quality = qVal > 1 ? qVal / 100 : qVal;
+    }
+    quality = Math.max(0.1, Math.min(1.0, quality));
+
+    const icoSizeStr = context.options?.icoSize || '32';
+    const icoTargetSize = icoSizeStr === 'original' ? 0 : parseInt(icoSizeStr, 10) || 32;
+
+    const formatToExtMap: Record<string, string> = {
+      'image/webp': 'webp',
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/avif': 'avif',
+      'image/bmp': 'bmp',
+      'image/x-icon': 'ico',
+      'image/gif': 'gif',
+      'image/tiff': 'tiff',
+      'image/svg+xml': 'svg'
+    };
+
+    const ext = formatToExtMap[targetFormat] || 'webp';
 
     let originalTotalSize = 0;
     let processedTotalSize = 0;
@@ -69,7 +140,7 @@ export const imageConvertTool: ToolDefinition = {
         continue;
       }
 
-      if (!file.name.match(/\.(jpg|jpeg|png|webp|bmp|gif)$/i) && (!file.type || !file.type.startsWith('image/'))) {
+      if (!file.name.match(/\.(jpg|jpeg|png|webp|bmp|gif|ico|tiff|tif|avif|svg)$/i) && (!file.type || !file.type.startsWith('image/'))) {
         failedFiles.push(file.name);
         continue;
       }
@@ -116,9 +187,13 @@ export const imageConvertTool: ToolDefinition = {
         canvas.width = w;
         canvas.height = h;
         const ctx = canvas.getContext('2d');
-        if (!ctx) throw new Error('Canvas context tidak didukung.');
+        if (!ctx) throw new Error('Canvas context tidak didukung browser.');
 
-        if (targetFormat === 'image/jpeg') {
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+
+        // Background handling: JPG & BMP need solid white background for transparency
+        if (targetFormat === 'image/jpeg' || targetFormat === 'image/bmp') {
           ctx.fillStyle = '#ffffff';
           ctx.fillRect(0, 0, w, h);
         } else {
@@ -126,20 +201,52 @@ export const imageConvertTool: ToolDefinition = {
         }
         ctx.drawImage(img, 0, 0, w, h);
 
-        const blob = await new Promise<Blob>((resolve, reject) => {
-          canvas.toBlob(
-            (b) => {
-              if (b) resolve(b);
-              else reject(new Error(`Gagal mengonversi file ${file.name}`));
-            },
-            targetFormat,
-            quality
-          );
-        });
+        let blob: Blob;
+        let effectiveExt = ext;
+        let effectiveMime = targetFormat;
 
-        const dataUrl = canvas.toDataURL(targetFormat, quality);
+        switch (targetFormat) {
+          case 'image/bmp':
+            blob = encodeBmp(canvas);
+            break;
+
+          case 'image/x-icon':
+            blob = await encodeIco(canvas, icoTargetSize);
+            break;
+
+          case 'image/tiff':
+            blob = encodeTiff(canvas);
+            break;
+
+          case 'image/svg+xml':
+            blob = encodeSvg(canvas);
+            break;
+
+          case 'image/avif': {
+            const avifRes = await encodeAvif(canvas, quality);
+            blob = avifRes.blob;
+            effectiveExt = avifRes.ext;
+            effectiveMime = avifRes.format;
+            break;
+          }
+
+          default:
+            blob = await new Promise<Blob>((resolve, reject) => {
+              canvas.toBlob(
+                (b) => {
+                  if (b) resolve(b);
+                  else reject(new Error(`Gagal mengonversi file ${file.name}`));
+                },
+                targetFormat,
+                quality
+              );
+            });
+            break;
+        }
+
+        const dataUrl = canvas.toDataURL(effectiveMime.startsWith('image/') ? effectiveMime : 'image/png', quality);
         const cleanBase = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
-        const finalName = `${cleanBase}.${ext}`;
+        const finalName = `${cleanBase}.${effectiveExt}`;
 
         processedTotalSize += blob.size;
         processedItems.push({
@@ -147,7 +254,7 @@ export const imageConvertTool: ToolDefinition = {
           name: finalName,
           size: blob.size,
           originalSize: file.size,
-          type: targetFormat,
+          type: effectiveMime,
           blob,
           dataUrl
         });

@@ -52,7 +52,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm transition-colors">
+      <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 dark:border-emerald-500/15 bg-white/85 dark:bg-[#05080f]/85 backdrop-blur-xl shadow-sm transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo */}
           <button
@@ -68,7 +68,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               alt="FreeTools"
               className="h-10 md:h-11 w-auto object-contain transition group-hover:scale-105"
             />
-            <span className="hidden sm:inline-block text-[10px] uppercase tracking-wider font-bold px-1.5 py-0.5 rounded bg-brand-500/10 text-brand-600 dark:text-brand-400 border border-brand-500/20 ml-1">
+            <span className="hidden sm:inline-flex items-center gap-1 text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 ml-1 shadow-sm">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
               Local-First
             </span>
           </button>

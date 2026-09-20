@@ -13,13 +13,13 @@ export default {
           100: '#dcfce7',
           200: '#bbf7d0',
           300: '#86efac',
-          400: '#4ade80',
-          500: '#22c55e',
-          600: '#16a34a',
-          700: '#15803d',
-          800: '#166534',
-          900: '#14532d',
-          950: '#052e16',
+          400: '#34d399',
+          500: '#10b981',
+          600: '#059669',
+          700: '#047857',
+          800: '#065f46',
+          900: '#064e3b',
+          950: '#022c22',
         },
         surface: {
           50: '#fafafa',
@@ -32,7 +32,7 @@ export default {
           700: '#3f3f46',
           800: '#27272a',
           900: '#18181b',
-          950: '#09090b',
+          950: '#05080f',
         }
       },
       fontFamily: {
@@ -40,12 +40,12 @@ export default {
         mono: ['JetBrains Mono', 'Fira Code', 'monospace']
       },
       boxShadow: {
-        'glow-sm': '0 0 15px -3px rgba(34, 197, 94, 0.2)',
-        'glow': '0 0 25px -5px rgba(34, 197, 94, 0.25)',
-        'glow-lg': '0 0 40px -5px rgba(34, 197, 94, 0.35)',
+        'glow-sm': '0 0 15px -3px rgba(16, 185, 129, 0.25)',
+        'glow': '0 0 25px -4px rgba(16, 185, 129, 0.35)',
+        'glow-lg': '0 0 45px -5px rgba(16, 185, 129, 0.45)',
         'glow-cyan': '0 0 30px -5px rgba(6, 182, 212, 0.25)',
         'card': '0 4px 20px -2px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.03)',
-        'card-dark': '0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05)',
+        'card-dark': '0 10px 30px -10px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(16, 185, 129, 0.1)',
         'premium': '0 20px 40px -15px rgba(0, 0, 0, 0.07), 0 0 0 1px rgba(0, 0, 0, 0.04)',
       },
       animation: {

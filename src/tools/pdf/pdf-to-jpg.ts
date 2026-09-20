@@ -63,9 +63,8 @@ export const pdfToJpgTool: ToolDefinition = {
 
     // Dynamic import for performance and lazy-loading
     const pdfjsLib = await import('pdfjs-dist');
-    if (typeof window !== 'undefined' && !pdfjsLib.GlobalWorkerOptions.workerSrc) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
-    }
+    const { setupPdfjsWorker } = await import('../../engine/pdfjs-worker');
+    setupPdfjsWorker(pdfjsLib);
 
     const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
     const pdf = await loadingTask.promise;

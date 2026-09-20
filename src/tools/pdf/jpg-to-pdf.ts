@@ -7,7 +7,21 @@ export const jpgToPdfTool: ToolDefinition = {
   shortDescription: 'Ubah satu atau banyak gambar jadi 1 dokumen PDF rapi',
   description: 'Konversi file JPG, PNG, atau WEBP menjadi file dokumen PDF berkualitas tinggi tanpa watermark.',
   category: 'pdf',
-  acceptedTypes: ['image/jpeg', 'image/png', 'image/webp', '.jpg', '.jpeg', '.png', '.webp'],
+  acceptedTypes: [
+    'image/jpeg',
+    'image/png',
+    'image/webp',
+    'image/*',
+    '.jpg',
+    '.jpeg',
+    '.png',
+    '.webp',
+    '.bmp',
+    '.gif',
+    '.avif',
+    '.tiff',
+    '.tif'
+  ],
   inputMode: 'multi-file',
   icon: 'FileImage',
   popular: true,
@@ -67,8 +81,7 @@ export const jpgToPdfTool: ToolDefinition = {
       const file = files[i];
       originalTotalSize += file.size;
 
-      // Validate file type
-      if (file.type && !file.type.startsWith('image/') && !file.name.match(/\.(jpg|jpeg|png|webp|bmp|gif)$/i)) {
+      if (file.type && !file.type.startsWith('image/') && !file.name.match(/\.(jpg|jpeg|png|webp|bmp|gif|avif|tiff|tif)$/i)) {
         throw new Error(`File "${file.name}" bukan format gambar yang didukung.`);
       }
 

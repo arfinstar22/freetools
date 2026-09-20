@@ -6,21 +6,32 @@ const MAX_CANVAS_DIM = 16384;
 export const imageCompressTool: ToolDefinition = {
   id: 'image-compress',
   name: 'Kompres Gambar',
-  shortDescription: 'Kecilkan ukuran file JPG, PNG, WEBP tanpa bikin buram',
-  description: 'Kompres gambar secara instan langsung di browsermu. Mempertahankan transparansi dan ketajaman visual.',
+  shortDescription: 'Kecilkan ukuran file JPG, PNG, WEBP dengan kontrol persen kualitas',
+  description: 'Kompres gambar secara instan langsung di browsermu dengan pengaturan persentase presisi. Menjaga transparansi, ketajaman visual, dan privasi 100%.',
   category: 'image',
-  acceptedTypes: ['image/jpeg', 'image/png', 'image/webp', '.jpg', '.jpeg', '.png', '.webp'],
+  acceptedTypes: ['image/jpeg', 'image/png', 'image/webp', '.jpg', '.jpeg', '.png', '.webp', '.bmp', '.gif'],
   inputMode: 'multi-file',
   icon: 'Minimize',
   popular: true,
   localProcessing: true,
   supportsBatch: true,
   supportsWorkflow: true,
-  keywords: ['compress image', 'kompres gambar', 'kecilkan foto', 'kompres foto', 'kecilkan jpg', 'kompres png', 'optimasi gambar'],
+  keywords: ['compress image', 'kompres gambar', 'kecilkan foto', 'kompres foto', 'kecilkan jpg', 'kompres png', 'optimasi gambar', 'persen kompresi foto'],
   optionSchemas: [
     {
+      id: 'qualityPercent',
+      label: 'Tingkat Kualitas Kompresi (%)',
+      description: 'Pilih persentase kualitas output (75% seimbang untuk web, 50% hemat kuota, 85% detail foto).',
+      type: 'range',
+      defaultValue: 75,
+      min: 10,
+      max: 95,
+      step: 5,
+      unit: '%'
+    },
+    {
       id: 'qualityPreset',
-      label: 'Pilihan Kualitas',
+      label: 'Preset Cepat Kualitas',
       type: 'select',
       defaultValue: 'balanced',
       options: [
@@ -31,14 +42,14 @@ export const imageCompressTool: ToolDefinition = {
     },
     {
       id: 'maxDimension',
-      label: 'Maksimal Dimensi (Opsional)',
+      label: 'Maksimal Dimensi Resolusi',
       type: 'select',
       defaultValue: 'original',
       options: [
         { label: 'Pertahankan Dimensi Asli', value: 'original' },
-        { label: 'Maks 1920px (Full HD)', value: '1920' },
-        { label: 'Maks 1280px (HD / Web)', value: '1280' },
-        { label: 'Maks 800px (Thumbnail / WhatsApp)', value: '800' }
+        { label: 'Maks 1920px (Full HD / Standar Desktop)', value: '1920' },
+        { label: 'Maks 1280px (HD / Web & Blog)', value: '1280' },
+        { label: 'Maks 800px (Thumbnail / WhatsApp Ringan)', value: '800' }
       ]
     }
   ],
@@ -50,10 +61,18 @@ export const imageCompressTool: ToolDefinition = {
       throw new Error('Pilih minimal 1 gambar untuk dikompres.');
     }
 
-    const preset = context.options?.qualityPreset || 'balanced';
+    // Resolve quality: range slider takes priority if explicitly set/different from default or when passed
     let quality = 0.75;
-    if (preset === 'high') quality = 0.85;
-    if (preset === 'minimal') quality = 0.55;
+    const rawQualityPercent = context.options?.qualityPercent;
+    if (typeof rawQualityPercent === 'number' || (typeof rawQualityPercent === 'string' && !isNaN(Number(rawQualityPercent)))) {
+      const p = Number(rawQualityPercent);
+      quality = Math.max(0.1, Math.min(0.98, p / 100));
+    } else {
+      const preset = context.options?.qualityPreset || 'balanced';
+      if (preset === 'high') quality = 0.85;
+      else if (preset === 'minimal') quality = 0.55;
+      else quality = 0.75;
+    }
 
     const maxDimStr = context.options?.maxDimension || 'original';
     const maxDim = maxDimStr === 'original' ? 0 : parseInt(maxDimStr, 10);
@@ -74,7 +93,7 @@ export const imageCompressTool: ToolDefinition = {
         continue;
       }
 
-      if (!file.name.match(/\.(jpg|jpeg|png|webp|bmp|gif)$/i) && (!file.type || !file.type.startsWith('image/'))) {
+      if (!file.name.match(/\.(jpg|jpeg|png|webp|bmp|gif|avif)$/i) && (!file.type || !file.type.startsWith('image/'))) {
         failedFiles.push(file.name);
         continue;
       }
@@ -83,7 +102,7 @@ export const imageCompressTool: ToolDefinition = {
         context.onProgress({
           current: i + 1,
           total: files.length,
-          message: `Mengompres ${file.name} (${i + 1}/${files.length})...`,
+          message: `Mengompres ${file.name} (${i + 1}/${files.length}) kualitas ${Math.round(quality * 100)}%...`,
           percentage: Math.round(((i + 1) / files.length) * 90)
         });
       }
@@ -193,13 +212,14 @@ export const imageCompressTool: ToolDefinition = {
 
     const savedPercentage = Math.max(0, Math.round(((originalTotalSize - processedTotalSize) / originalTotalSize) * 100));
     const failureNote = failedFiles.length > 0 ? ` (${failedFiles.length} file rusak dilewati)` : '';
+    const qPctDisplay = Math.round(quality * 100);
 
     if (processedItems.length === 1 && files.length === 1) {
       return {
         success: true,
         message: savedPercentage > 0
-          ? `Selesai! Berhasil menghemat ${savedPercentage}% ukuran gambar.${failureNote}`
-          : `Gambar berhasil dioptimalkan!${failureNote}`,
+          ? `Selesai! Berhasil menghemat ${savedPercentage}% ukuran gambar (Kualitas: ${qPctDisplay}%).${failureNote}`
+          : `Gambar berhasil dioptimalkan pada kualitas ${qPctDisplay}%!${failureNote}`,
         downloadName: processedItems[0].name,
         items: processedItems,
         stats: {
@@ -215,7 +235,7 @@ export const imageCompressTool: ToolDefinition = {
     const zipBlob = await createZipFromFiles(filesForZip, 'freetools_gambar_kompres.zip');
     return {
       success: true,
-      message: `Selesai! Berhasil mengompres ${processedItems.length} gambar (hemat ${savedPercentage}%).${failureNote}`,
+      message: `Selesai! Berhasil mengompres ${processedItems.length} gambar (hemat ${savedPercentage}%, kualitas ${qPctDisplay}%).${failureNote}`,
       downloadName: 'freetools_gambar_kompres.zip',
       items: [
         {

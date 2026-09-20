@@ -9,7 +9,7 @@ export const imageResizeTool: ToolDefinition = {
   shortDescription: 'Ubah dimensi lebar/tinggi atau persentase gambar',
   description: 'Ubah resolusi foto menjadi ukuran tertentu (pixel atau persentase). Menjaga rasio aspek tetap proporsional dan mempertahankan transparansi PNG/WEBP.',
   category: 'image',
-  acceptedTypes: ['image/jpeg', 'image/png', 'image/webp', '.jpg', '.jpeg', '.png', '.webp'],
+  acceptedTypes: ['image/jpeg', 'image/png', 'image/webp', '.jpg', '.jpeg', '.png', '.webp', '.bmp', '.gif', '.avif'],
   inputMode: 'multi-file',
   icon: 'Scaling',
   popular: true,
@@ -82,7 +82,7 @@ export const imageResizeTool: ToolDefinition = {
         continue;
       }
 
-      if (!file.name.match(/\.(jpg|jpeg|png|webp|bmp|gif)$/i) && (!file.type || !file.type.startsWith('image/'))) {
+      if (!file.name.match(/\.(jpg|jpeg|png|webp|bmp|gif|avif)$/i) && (!file.type || !file.type.startsWith('image/'))) {
         failedFiles.push(file.name);
         continue;
       }
