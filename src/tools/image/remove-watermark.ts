@@ -1,7 +1,6 @@
 import { ToolDefinition, ProcessContext, ProcessResult } from '../../types/tool';
 
 const MAX_CANVAS_DIM = 16384;
-const MODEL_CACHE_KEY = 'lama-onnx-v1';
 const PRIMARY_MODEL_URL = 'https://huggingface.co/Carve/LaMa-ONNX/resolve/main/lama.onnx';
 const FALLBACK_MODEL_URL = 'https://huggingface.co/IsGarrido/LaMa-ONNX/resolve/main/lama.onnx';
 
@@ -11,8 +10,8 @@ let cachedSession: any = null;
 export const removeWatermarkTool: ToolDefinition = {
   id: 'remove-watermark',
   name: 'Hapus Watermark Foto (AI)',
-  shortDescription: 'Hapus watermark, logo, atau teks foto otomatis dengan AI Neural Inpainting',
-  description: 'Hapus watermark, logo overlay, timestamp, atau teks dari foto dengan teknologi 100% AI Deep Learning (LaMa Neural Inpainting). Posisi watermark otomatis terdeteksi saat upload foto, diproses langsung secara lokal dengan patch-blending resolusi tinggi tanpa mengurangi kualitas foto asli.',
+  shortDescription: 'Hapus watermark, logo, atau teks foto dengan AI Neural Inpainting',
+  description: 'Hapus watermark, logo overlay, timestamp, atau teks dari foto dengan teknologi 100% AI Deep Learning (LaMa Neural Inpainting). Posisi watermark dapat dipilih secara manual atau ditarik langsung pada foto, diproses langsung secara lokal dengan patch-blending resolusi tinggi tanpa mengurangi kualitas foto asli.',
   category: 'image',
   acceptedTypes: ['image/jpeg', 'image/png', 'image/webp', '.jpg', '.jpeg', '.png', '.webp'],
   inputMode: 'file',
@@ -336,7 +335,7 @@ async function executePatchInpainting(
           executionProviders: ['wasm'],
           graphOptimizationLevel: 'all'
         });
-      } catch (errPrimary) {
+      } catch {
         cachedSession = await ort.InferenceSession.create(FALLBACK_MODEL_URL, {
           executionProviders: ['wasm'],
           graphOptimizationLevel: 'all'
