@@ -19,7 +19,7 @@
     "diff": "^9.0.0",
     "jszip": "^3.10.1",
     "lucide-react": "^1.40.0",
-    "onnxruntime-web": "^1.30.0",
+    "onnxruntime-web": "^1.21.0",
     "pdf-lib": "^1.17.1",
     "pdfjs-dist": "^3.11.174",
     "react": "^19.2.8",

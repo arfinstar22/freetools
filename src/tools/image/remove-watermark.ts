@@ -1,4 +1,4 @@
-import { ToolDefinition, ProcessContext, ProcessResult, ProcessedItem } from '../../types/tool';
+import { ToolDefinition, ProcessContext, ProcessResult } from '../../types/tool';
 import { teleaInpaint } from '../../utils/inpaint-telea';
 
 const MAX_CANVAS_DIM = 16384;
