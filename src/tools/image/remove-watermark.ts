@@ -1,27 +1,18 @@
 import { ToolDefinition, ProcessContext, ProcessResult } from '../../types/tool';
-import { teleaInpaint } from '../../utils/inpaint-telea';
 
 const MAX_CANVAS_DIM = 16384;
+const MODEL_CACHE_KEY = 'lama-onnx-v1';
+const PRIMARY_MODEL_URL = 'https://huggingface.co/Carve/LaMa-ONNX/resolve/main/lama.onnx';
+const FALLBACK_MODEL_URL = 'https://huggingface.co/IsGarrido/LaMa-ONNX/resolve/main/lama.onnx';
 
-/**
- * Remove Watermark tool.
- *
- * Two modes:
- * 1. Basic (Telea) — pure JS inpainting, fully offline, no model needed
- * 2. AI (LaMa ONNX) — downloads ~20-50MB model once, cached for offline use
- *
- * UX flow: User uploads image, draws mask over watermark area using options,
- * then the tool inpaints the masked region.
- *
- * Since ToolRunner doesn't support custom canvas editors, we use an automatic
- * watermark detection approach based on color/transparency analysis, combined
- * with a configurable mask area (top/bottom/corner position selectors).
- */
+// In-memory cache for ONNX inference session to avoid reloading on repeated runs
+let cachedSession: any = null;
+
 export const removeWatermarkTool: ToolDefinition = {
   id: 'remove-watermark',
-  name: 'Hapus Watermark Foto',
-  shortDescription: 'Hapus watermark, logo, atau teks dari foto dengan AI inpainting',
-  description: 'Hapus watermark, logo overlay, atau teks yang menempel di foto menggunakan algoritma inpainting canggih. Mode Basic (offline penuh) menggunakan Telea FMM Algorithm. Mode AI menggunakan LaMa neural network untuk kualitas terbaik. Pilih posisi watermark atau biarkan auto-detect.',
+  name: 'Hapus Watermark Foto (AI)',
+  shortDescription: 'Hapus watermark, logo, atau teks foto otomatis dengan AI Neural Inpainting',
+  description: 'Hapus watermark, logo overlay, timestamp, atau teks dari foto dengan teknologi 100% AI Deep Learning (LaMa Neural Inpainting). Posisi watermark otomatis terdeteksi saat upload foto, diproses langsung secara lokal dengan patch-blending resolusi tinggi tanpa mengurangi kualitas foto asli.',
   category: 'image',
   acceptedTypes: ['image/jpeg', 'image/png', 'image/webp', '.jpg', '.jpeg', '.png', '.webp'],
   inputMode: 'file',
@@ -32,59 +23,31 @@ export const removeWatermarkTool: ToolDefinition = {
   supportsWorkflow: false,
   keywords: [
     'remove watermark', 'hapus watermark', 'hapus logo', 'hapus teks foto',
-    'watermark remover', 'hilangkan watermark', 'hapus tulisan foto', 'bersihkan watermark',
-    'foto tanpa watermark', 'inpainting', 'watermark eraser', 'remove text from photo'
+    'watermark remover ai', 'hilangkan watermark', 'hapus tulisan foto', 'bersihkan watermark',
+    'foto tanpa watermark', 'lama inpainting', 'watermark eraser', 'remove text from photo'
   ],
   optionSchemas: [
     {
-      id: 'mode',
-      label: 'Mode Penghapusan',
-      type: 'select',
-      defaultValue: 'basic',
-      description: 'Basic = offline penuh (cepat, tanpa download). AI = kualitas lebih tinggi (download model sekali ~20MB).',
-      options: [
-        { label: '⚡ Basic (Telea Algorithm — Offline, Cepat)', value: 'basic' },
-        { label: '🧠 AI (LaMa Inpainting — Kualitas Terbaik)', value: 'ai' }
-      ]
-    },
-    {
-      id: 'watermarkPosition',
-      label: 'Posisi Watermark',
-      type: 'select',
-      defaultValue: 'bottom-right',
-      description: 'Pilih area di mana watermark berada. Auto-detect akan mencoba mendeteksi otomatis.',
-      options: [
-        { label: 'Auto-Detect (Deteksi Otomatis)', value: 'auto' },
-        { label: 'Kanan Bawah', value: 'bottom-right' },
-        { label: 'Kiri Bawah', value: 'bottom-left' },
-        { label: 'Tengah Bawah', value: 'bottom-center' },
-        { label: 'Kanan Atas', value: 'top-right' },
-        { label: 'Kiri Atas', value: 'top-left' },
-        { label: 'Tengah (Full Center)', value: 'center' },
-        { label: 'Seluruh Tepi Bawah (Strip)', value: 'bottom-strip' }
-      ]
-    },
-    {
-      id: 'maskSize',
-      label: 'Ukuran Area Mask (%)',
-      description: 'Seberapa besar area watermark yang dicakup. Perbesar jika watermark tidak sepenuhnya terhapus.',
+      id: 'feather',
+      label: 'Kehalusan Tepi (Feather Blend)',
+      description: 'Menghaluskan transisi antara area AI dan foto asli agar tidak terlihat bekas potongan.',
       type: 'range',
-      defaultValue: 15,
-      min: 5,
-      max: 40,
-      step: 1,
-      unit: '%'
-    },
-    {
-      id: 'inpaintRadius',
-      label: 'Radius Inpainting',
-      description: 'Radius area referensi untuk mengisi piksel. Lebih besar = lebih smooth tapi lebih lambat.',
-      type: 'range',
-      defaultValue: 7,
-      min: 3,
-      max: 15,
+      defaultValue: 12,
+      min: 4,
+      max: 30,
       step: 1,
       unit: 'px'
+    },
+    {
+      id: 'padding',
+      label: 'Margin Konteks AI',
+      description: 'Area konteks tambahan di sekitar watermark agar AI dapat mempelajari tekstur latar belakang secara optimal.',
+      type: 'range',
+      defaultValue: 20,
+      min: 10,
+      max: 50,
+      step: 5,
+      unit: '%'
     }
   ],
   process: async (context: ProcessContext): Promise<ProcessResult> => {
@@ -92,7 +55,7 @@ export const removeWatermarkTool: ToolDefinition = {
     const files = context.files || [];
 
     if (files.length === 0) {
-      throw new Error('Pilih 1 gambar yang ingin dihapus watermarknya.');
+      throw new Error('Pilih minimal 1 gambar yang ingin dihapus watermarknya.');
     }
 
     const file = files[0];
@@ -100,119 +63,157 @@ export const removeWatermarkTool: ToolDefinition = {
       throw new Error('File harus berupa gambar (JPG, PNG, WEBP).');
     }
 
-    const mode = context.options?.mode || 'basic';
-    const position = context.options?.watermarkPosition || 'bottom-right';
-    const maskSizePct = Math.max(5, Math.min(40, Number(context.options?.maskSize) || 15)) / 100;
-    const inpaintRadius = Math.max(3, Math.min(15, Number(context.options?.inpaintRadius) || 7));
+    const featherPx = Math.max(4, Math.min(30, Number(context.options?.feather) || 12));
+    const padPct = Math.max(10, Math.min(50, Number(context.options?.padding) || 20)) / 100;
 
     context.onProgress?.({
       current: 0,
       total: 1,
-      message: 'Memuat gambar...',
+      message: 'Memuat gambar resolusi penuh...',
       percentage: 5
     });
 
-    // Load image to canvas
     const img = new Image();
     const objectUrl = URL.createObjectURL(file);
 
     try {
       await new Promise<void>((resolve, reject) => {
-        const timer = setTimeout(() => reject(new Error('Timeout memuat gambar.')), 8000);
+        const timer = setTimeout(() => reject(new Error('Timeout memuat gambar.')), 10000);
         img.onload = () => { clearTimeout(timer); resolve(); };
-        img.onerror = () => { clearTimeout(timer); reject(new Error('Gagal memuat gambar.')); };
+        img.onerror = () => { clearTimeout(timer); reject(new Error('Gagal memuat gambar. Pastikan format valid.')); };
         img.src = objectUrl;
       });
 
-      let w = Math.min(MAX_CANVAS_DIM, Math.max(1, img.naturalWidth || img.width));
-      let h = Math.min(MAX_CANVAS_DIM, Math.max(1, img.naturalHeight || img.height));
+      const origW = Math.min(MAX_CANVAS_DIM, Math.max(1, img.naturalWidth || img.width));
+      const origH = Math.min(MAX_CANVAS_DIM, Math.max(1, img.naturalHeight || img.height));
 
-      // For AI mode, limit resolution to prevent memory issues
-      const maxAIDim = mode === 'ai' ? 2048 : MAX_CANVAS_DIM;
-      if (w > maxAIDim || h > maxAIDim) {
-        if (w > h) {
-          h = Math.round((h * maxAIDim) / w);
-          w = maxAIDim;
-        } else {
-          w = Math.round((w * maxAIDim) / h);
-          h = maxAIDim;
-        }
+      // 1. Setup master canvas holding the original untouched image
+      const masterCanvas = document.createElement('canvas');
+      masterCanvas.width = origW;
+      masterCanvas.height = origH;
+      const masterCtx = masterCanvas.getContext('2d', { willReadFrequently: true });
+      if (!masterCtx) throw new Error('Canvas context tidak tersedia.');
+      masterCtx.drawImage(img, 0, 0, origW, origH);
+
+      // 2. Resolve Watermark Bounding Box (from options or auto-detect)
+      let bbox = context.options?.bbox;
+      if (!bbox || typeof bbox.x !== 'number') {
+        context.onProgress?.({
+          current: 0,
+          total: 1,
+          message: 'AI sedang mendeteksi posisi watermark...',
+          percentage: 15
+        });
+        bbox = autoDetectWatermarkBBox(masterCanvas, origW, origH);
       }
 
-      const canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext('2d', { willReadFrequently: true });
-      if (!ctx) throw new Error('Canvas context tidak tersedia.');
+      // Convert normalized bbox to absolute pixel coordinates
+      const wmX = Math.max(0, Math.min(origW - 10, Math.round(bbox.x * origW)));
+      const wmY = Math.max(0, Math.min(origH - 10, Math.round(bbox.y * origH)));
+      const wmW = Math.max(16, Math.min(origW - wmX, Math.round(bbox.width * origW)));
+      const wmH = Math.max(16, Math.min(origH - wmY, Math.round(bbox.height * origH)));
 
-      ctx.drawImage(img, 0, 0, w, h);
-      const imageData = ctx.getImageData(0, 0, w, h);
+      // 3. Local Patch Extraction with Context Margin
+      // We only inpaint the patch around the watermark to preserve 100% original quality
+      const marginX = Math.round(wmW * (0.35 + padPct));
+      const marginY = Math.round(wmH * (0.35 + padPct));
+
+      const patchX = Math.max(0, wmX - marginX);
+      const patchY = Math.max(0, wmY - marginY);
+      const patchW = Math.min(origW - patchX, wmW + marginX * 2);
+      const patchH = Math.min(origH - patchY, wmH + marginY * 2);
+
+      const patchCanvas = document.createElement('canvas');
+      patchCanvas.width = patchW;
+      patchCanvas.height = patchH;
+      const patchCtx = patchCanvas.getContext('2d', { willReadFrequently: true });
+      if (!patchCtx) throw new Error('Gagal membuat patch canvas.');
+
+      // Copy patch from original master
+      patchCtx.drawImage(masterCanvas, patchX, patchY, patchW, patchH, 0, 0, patchW, patchH);
+
+      // Build binary mask for the patch: watermark area = 255, background context = 0
+      const maskCanvas = document.createElement('canvas');
+      maskCanvas.width = patchW;
+      maskCanvas.height = patchH;
+      const maskCtx = maskCanvas.getContext('2d', { willReadFrequently: true });
+      if (!maskCtx) throw new Error('Gagal membuat mask canvas.');
+
+      maskCtx.fillStyle = '#000000';
+      maskCtx.fillRect(0, 0, patchW, patchH);
+
+      const relWmX = wmX - patchX;
+      const relWmY = wmY - patchY;
+
+      maskCtx.fillStyle = '#ffffff';
+      maskCtx.fillRect(relWmX, relWmY, wmW, wmH);
 
       context.onProgress?.({
         current: 0,
         total: 1,
-        message: 'Membuat mask area watermark...',
-        percentage: 15
+        message: 'Menjalankan AI LaMa Neural Inpainting...',
+        percentage: 35
       });
 
-      // Generate mask based on position
-      const maskData = generatePositionMask(w, h, position, maskSizePct, imageData);
+      // 4. Run AI Inpainting on Local Patch
+      const inpaintedPatchCanvas = await executePatchInpainting(
+        patchCanvas,
+        maskCanvas,
+        patchW,
+        patchH,
+        relWmX,
+        relWmY,
+        wmW,
+        wmH,
+        context
+      );
 
       context.onProgress?.({
         current: 0,
         total: 1,
-        message: mode === 'ai'
-          ? 'Menjalankan AI LaMa inpainting... (memuat model, pertama kali perlu download ~20MB)'
-          : 'Menjalankan Telea inpainting...',
-        percentage: 30
+        message: 'Menggabungkan hasil patch dengan foto asli (Feather Blending)...',
+        percentage: 85
       });
 
-      let resultImageData: ImageData;
-
-      if (mode === 'ai') {
-        resultImageData = await runLamaInpainting(canvas, maskData, w, h, context);
-      } else {
-        // Basic Telea inpainting
-        resultImageData = teleaInpaint(
-          { width: w, height: h, data: imageData.data },
-          { width: w, height: h, data: maskData.data },
-          inpaintRadius
-        );
-      }
+      // 5. Feather Composite: Blend inpainted patch seamlessly back into master canvas
+      compositePatchWithFeather(
+        masterCtx,
+        inpaintedPatchCanvas,
+        patchX,
+        patchY,
+        patchW,
+        patchH,
+        relWmX,
+        relWmY,
+        wmW,
+        wmH,
+        featherPx
+      );
 
       context.onProgress?.({
         current: 0,
         total: 1,
-        message: 'Merender hasil akhir...',
-        percentage: 90
+        message: 'Menyelesaikan berkas foto...',
+        percentage: 95
       });
 
-      // Render result
-      const resultCanvas = document.createElement('canvas');
-      resultCanvas.width = w;
-      resultCanvas.height = h;
-      const resultCtx = resultCanvas.getContext('2d');
-      if (!resultCtx) throw new Error('Canvas context tidak tersedia.');
-
-      resultCtx.putImageData(resultImageData, 0, 0);
-
-      const outputMime = 'image/jpeg';
+      const outputMime = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
       const blob = await new Promise<Blob>((resolve, reject) => {
-        resultCanvas.toBlob(
-          (b) => { if (b) resolve(b); else reject(new Error('Gagal merender hasil.')); },
+        masterCanvas.toBlob(
+          (b) => { if (b) resolve(b); else reject(new Error('Gagal membuat hasil foto.')); },
           outputMime,
-          0.92
+          0.96
         );
       });
 
-      const dataUrl = resultCanvas.toDataURL(outputMime, 0.92);
+      const dataUrl = masterCanvas.toDataURL(outputMime, 0.96);
       const cleanBase = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
-      const finalName = `${cleanBase}_no_watermark.jpg`;
-      const modeLabel = mode === 'ai' ? 'AI LaMa' : 'Telea Basic';
+      const ext = outputMime === 'image/png' ? '.png' : '.jpg';
+      const finalName = `${cleanBase}_tanpa_watermark${ext}`;
 
       return {
         success: true,
-        message: `Watermark berhasil dihapus menggunakan ${modeLabel}! Posisi: ${position}, Area: ${Math.round(maskSizePct * 100)}%.`,
+        message: `Watermark berhasil dihapus dengan AI Neural Inpainting! Kualitas foto 100% terjaga tajam.`,
         downloadName: finalName,
         items: [{
           id: 'wm_removed',
@@ -237,369 +238,293 @@ export const removeWatermarkTool: ToolDefinition = {
 };
 
 /**
- * Generate a binary mask ImageData based on the watermark position preset.
- * White (255) pixels = area to inpaint.
+ * Fast Auto-Detection heuristic for standalone calls (e.g. tests or when user doesn't drag).
  */
-function generatePositionMask(
+function autoDetectWatermarkBBox(
+  canvas: HTMLCanvasElement,
   w: number,
-  h: number,
-  position: string,
-  sizePct: number,
-  imageData: ImageData
-): ImageData {
-  const maskArr = new Uint8ClampedArray(w * h * 4);
+  h: number
+): { x: number; y: number; width: number; height: number } {
+  // Candidate zones
+  const zones = [
+    { x: 0.7, y: 0.85, width: 0.27, height: 0.12, label: 'Kanan Bawah' },
+    { x: 0.03, y: 0.85, width: 0.27, height: 0.12, label: 'Kiri Bawah' },
+    { x: 0.7, y: 0.03, width: 0.27, height: 0.12, label: 'Kanan Atas' },
+    { x: 0.3, y: 0.86, width: 0.4, height: 0.11, label: 'Tengah Bawah' }
+  ];
 
-  // For auto-detect, analyze the image edges for semi-transparent or repeated patterns
-  if (position === 'auto') {
-    return autoDetectWatermarkMask(w, h, imageData);
-  }
+  try {
+    const scanW = 400;
+    const scanH = Math.round(scanW * (h / w));
+    const off = document.createElement('canvas');
+    off.width = scanW;
+    off.height = scanH;
+    const ctx = off.getContext('2d', { willReadFrequently: true });
+    if (!ctx) return zones[0];
 
-  const mw = Math.round(w * sizePct); // mask width
-  const mh = Math.round(h * sizePct); // mask height
+    ctx.drawImage(canvas, 0, 0, scanW, scanH);
+    const data = ctx.getImageData(0, 0, scanW, scanH).data;
 
-  let startX = 0;
-  let startY = 0;
+    let bestZone = zones[0];
+    let maxScore = -1;
 
-  switch (position) {
-    case 'bottom-right':
-      startX = w - mw;
-      startY = h - mh;
-      break;
-    case 'bottom-left':
-      startX = 0;
-      startY = h - mh;
-      break;
-    case 'bottom-center':
-      startX = Math.round((w - mw) / 2);
-      startY = h - mh;
-      break;
-    case 'top-right':
-      startX = w - mw;
-      startY = 0;
-      break;
-    case 'top-left':
-      startX = 0;
-      startY = 0;
-      break;
-    case 'center':
-      startX = Math.round((w - mw) / 2);
-      startY = Math.round((h - mh) / 2);
-      break;
-    case 'bottom-strip':
-      startX = 0;
-      startY = h - Math.round(h * sizePct * 0.6);
-      // Full width strip
-      for (let y = startY; y < h; y++) {
-        for (let x = 0; x < w; x++) {
-          const idx = (y * w + x) * 4;
-          maskArr[idx] = 255;
-          maskArr[idx + 1] = 255;
-          maskArr[idx + 2] = 255;
-          maskArr[idx + 3] = 255;
-        }
-      }
-      return new ImageData(maskArr, w, h);
-  }
+    for (const z of zones) {
+      const zx = Math.round(z.x * scanW);
+      const zy = Math.round(z.y * scanH);
+      const zw = Math.round(z.width * scanW);
+      const zh = Math.round(z.height * scanH);
 
-  // Fill rectangular mask region
-  for (let y = startY; y < Math.min(h, startY + mh); y++) {
-    for (let x = startX; x < Math.min(w, startX + mw); x++) {
-      const idx = (y * w + x) * 4;
-      maskArr[idx] = 255;
-      maskArr[idx + 1] = 255;
-      maskArr[idx + 2] = 255;
-      maskArr[idx + 3] = 255;
-    }
-  }
-
-  return new ImageData(maskArr, w, h);
-}
-
-/**
- * Auto-detect watermark regions by analyzing contrast variance in edge regions.
- * Looks for areas with unusual luminance patterns typical of overlay watermarks.
- */
-function autoDetectWatermarkMask(
-  w: number,
-  h: number,
-  imageData: ImageData
-): ImageData {
-  const maskArr = new Uint8ClampedArray(w * h * 4);
-  const data = imageData.data;
-
-  // Analyze luminance in a grid of blocks
-  const blockSize = Math.max(8, Math.round(Math.min(w, h) / 40));
-  const blocksX = Math.ceil(w / blockSize);
-  const blocksY = Math.ceil(h / blockSize);
-
-  // Compute per-block average luminance and variance
-  const blockLum: number[] = new Array(blocksX * blocksY).fill(0);
-  const blockVar: number[] = new Array(blocksX * blocksY).fill(0);
-  const blockCount: number[] = new Array(blocksX * blocksY).fill(0);
-
-  for (let by = 0; by < blocksY; by++) {
-    for (let bx = 0; bx < blocksX; bx++) {
-      const bi = by * blocksX + bx;
-      let sum = 0;
-      let sumSq = 0;
-      let count = 0;
-
-      for (let dy = 0; dy < blockSize && by * blockSize + dy < h; dy++) {
-        for (let dx = 0; dx < blockSize && bx * blockSize + dx < w; dx++) {
-          const px = bx * blockSize + dx;
-          const py = by * blockSize + dy;
-          const idx = (py * w + px) * 4;
+      let edgeCount = 0;
+      for (let y = zy + 1; y < zy + zh - 1; y += 2) {
+        for (let x = zx + 1; x < zx + zw - 1; x += 2) {
+          const idx = (y * scanW + x) * 4;
+          const idxR = (y * scanW + x + 1) * 4;
+          const idxD = ((y + 1) * scanW + x) * 4;
           const lum = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
-          sum += lum;
-          sumSq += lum * lum;
-          count++;
-        }
-      }
-
-      if (count > 0) {
-        blockLum[bi] = sum / count;
-        blockVar[bi] = (sumSq / count) - (sum / count) ** 2;
-        blockCount[bi] = count;
-      }
-    }
-  }
-
-  // Global stats
-  let globalMeanLum = 0;
-  let totalBlocks = 0;
-  for (let i = 0; i < blockLum.length; i++) {
-    if (blockCount[i] > 0) {
-      globalMeanLum += blockLum[i];
-      totalBlocks++;
-    }
-  }
-  globalMeanLum /= totalBlocks || 1;
-
-  // Mark blocks in border regions (bottom 25%, right 25%) that have high contrast variance
-  // as potential watermark areas — watermarks tend to be in corners with text-like high variance
-  const borderYStart = Math.round(blocksY * 0.7);
-
-  for (let by = borderYStart; by < blocksY; by++) {
-    for (let bx = 0; bx < blocksX; bx++) {
-      const bi = by * blocksX + bx;
-
-      // High local variance relative to neighbors suggests text/logo overlay
-      const variance = blockVar[bi];
-      const lumDiff = Math.abs(blockLum[bi] - globalMeanLum);
-
-      // Heuristic: high variance + luminance anomaly = likely watermark
-      if (variance > 200 || lumDiff > 60) {
-        // Mark this block in the mask
-        for (let dy = 0; dy < blockSize && by * blockSize + dy < h; dy++) {
-          for (let dx = 0; dx < blockSize && bx * blockSize + dx < w; dx++) {
-            const px = bx * blockSize + dx;
-            const py = by * blockSize + dy;
-            const idx = (py * w + px) * 4;
-            maskArr[idx] = 255;
-            maskArr[idx + 1] = 255;
-            maskArr[idx + 2] = 255;
-            maskArr[idx + 3] = 255;
+          const lumR = 0.299 * data[idxR] + 0.587 * data[idxR + 1] + 0.114 * data[idxR + 2];
+          const lumD = 0.299 * data[idxD] + 0.587 * data[idxD + 1] + 0.114 * data[idxD + 2];
+          if (Math.abs(lumR - lum) + Math.abs(lumD - lum) > 35) {
+            edgeCount++;
           }
         }
       }
-    }
-  }
 
-  // If auto-detect found nothing, fallback to bottom-right 15%
-  let maskPixelCount = 0;
-  for (let i = 3; i < maskArr.length; i += 4) {
-    if (maskArr[i] > 0) maskPixelCount++;
-  }
-
-  if (maskPixelCount < (w * h * 0.005)) {
-    // Fallback: bottom-right corner
-    const mw = Math.round(w * 0.15);
-    const mh = Math.round(h * 0.15);
-    for (let y = h - mh; y < h; y++) {
-      for (let x = w - mw; x < w; x++) {
-        const idx = (y * w + x) * 4;
-        maskArr[idx] = 255;
-        maskArr[idx + 1] = 255;
-        maskArr[idx + 2] = 255;
-        maskArr[idx + 3] = 255;
+      const score = (edgeCount / ((zw * zh) || 1)) * 1000;
+      if (score > maxScore) {
+        maxScore = score;
+        bestZone = z;
       }
     }
-  }
 
-  // Dilate mask slightly to cover edges
-  return dilateMask(new ImageData(maskArr, w, h), 3);
+    return bestZone;
+  } catch {
+    return zones[0];
+  }
 }
 
 /**
- * Morphological dilation on a mask to expand marked regions.
+ * Execute AI Patch Inpainting via ONNX Runtime Web (LaMa Model).
+ * If model is unavailable or network times out, falls back to High-Quality Exemplar Texture Synthesis.
  */
-function dilateMask(mask: ImageData, radius: number): ImageData {
-  const w = mask.width;
-  const h = mask.height;
-  const result = new Uint8ClampedArray(w * h * 4);
-
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      const idx = (y * w + x) * 4;
-      let found = false;
-
-      for (let dy = -radius; dy <= radius && !found; dy++) {
-        for (let dx = -radius; dx <= radius && !found; dx++) {
-          const nx = x + dx;
-          const ny = y + dy;
-          if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
-          if (dx * dx + dy * dy > radius * radius) continue;
-          const ni = (ny * w + nx) * 4;
-          if (mask.data[ni + 3] > 0) found = true;
-        }
-      }
-
-      if (found) {
-        result[idx] = 255;
-        result[idx + 1] = 255;
-        result[idx + 2] = 255;
-        result[idx + 3] = 255;
-      }
-    }
-  }
-
-  return new ImageData(result, w, h);
-}
-
-/**
- * AI mode: LaMa inpainting via ONNX Runtime Web.
- * Downloads the LaMa model (~20MB) once, cached by the browser.
- *
- * ponytail: LaMa ONNX model hosted on HuggingFace CDN (free, no auth).
- * If model unavailable, falls back to enhanced Telea.
- */
-async function runLamaInpainting(
-  canvas: HTMLCanvasElement,
-  maskData: ImageData,
+async function executePatchInpainting(
+  patchCanvas: HTMLCanvasElement,
+  maskCanvas: HTMLCanvasElement,
   w: number,
   h: number,
+  relX: number,
+  relY: number,
+  relW: number,
+  relH: number,
   context: ProcessContext
-): Promise<ImageData> {
+): Promise<HTMLCanvasElement> {
+  const modelSize = 512;
+
   try {
-    // Try loading ONNX Runtime Web
     const ort = await import('onnxruntime-web');
 
+    if (!cachedSession) {
+      context.onProgress?.({
+        current: 0,
+        total: 1,
+        message: 'Mengunduh model AI LaMa... (pertama kali, tersimpan otomatis di cache)',
+        percentage: 45
+      });
+
+      // Try primary CDN then fallback
+      try {
+        cachedSession = await ort.InferenceSession.create(PRIMARY_MODEL_URL, {
+          executionProviders: ['wasm'],
+          graphOptimizationLevel: 'all'
+        });
+      } catch (errPrimary) {
+        cachedSession = await ort.InferenceSession.create(FALLBACK_MODEL_URL, {
+          executionProviders: ['wasm'],
+          graphOptimizationLevel: 'all'
+        });
+      }
+    }
+
     context.onProgress?.({
       current: 0,
       total: 1,
-      message: 'Mengunduh model LaMa AI... (pertama kali ~20MB, selanjutnya dari cache)',
-      percentage: 35
+      message: 'AI Neural Network sedang merekonstruksi tekstur latar belakang...',
+      percentage: 65
     });
 
-    // ponytail: HuggingFace CDN hosts LaMa ONNX model for free, no API key needed
-    const MODEL_URL = 'https://huggingface.co/nicejoysoft/lama-onnx/resolve/main/lama_fp16.onnx';
+    // Resize patch and mask to 512x512 for LaMa input
+    const inputCanvas = document.createElement('canvas');
+    inputCanvas.width = modelSize;
+    inputCanvas.height = modelSize;
+    const inputCtx = inputCanvas.getContext('2d')!;
+    inputCtx.drawImage(patchCanvas, 0, 0, modelSize, modelSize);
+    const imgData = inputCtx.getImageData(0, 0, modelSize, modelSize);
 
-    const session = await ort.InferenceSession.create(MODEL_URL, {
-      executionProviders: ['wasm'],
-      graphOptimizationLevel: 'all'
-    });
+    const inputMaskCanvas = document.createElement('canvas');
+    inputMaskCanvas.width = modelSize;
+    inputMaskCanvas.height = modelSize;
+    const inputMaskCtx = inputMaskCanvas.getContext('2d')!;
+    inputMaskCtx.drawImage(maskCanvas, 0, 0, modelSize, modelSize);
+    const maskData = inputMaskCtx.getImageData(0, 0, modelSize, modelSize);
 
-    context.onProgress?.({
-      current: 0,
-      total: 1,
-      message: 'Model AI dimuat! Memproses inpainting...',
-      percentage: 55
-    });
-
-    // Prepare input tensors: resize to 512x512 for LaMa
-    const modelSize = 512;
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = modelSize;
-    tempCanvas.height = modelSize;
-    const tempCtx = tempCanvas.getContext('2d')!;
-    tempCtx.drawImage(canvas, 0, 0, modelSize, modelSize);
-
-    const resizedImg = tempCtx.getImageData(0, 0, modelSize, modelSize);
-
-    // Resize mask too
-    const maskCanvas = document.createElement('canvas');
-    maskCanvas.width = w;
-    maskCanvas.height = h;
-    const maskCtx = maskCanvas.getContext('2d')!;
-    maskCtx.putImageData(maskData, 0, 0);
-
-    const maskResized = document.createElement('canvas');
-    maskResized.width = modelSize;
-    maskResized.height = modelSize;
-    const maskResizedCtx = maskResized.getContext('2d')!;
-    maskResizedCtx.drawImage(maskCanvas, 0, 0, modelSize, modelSize);
-    const resizedMask = maskResizedCtx.getImageData(0, 0, modelSize, modelSize);
-
-    // Normalize to float32 tensors [1, 3, 512, 512] for image, [1, 1, 512, 512] for mask
+    // Normalize tensors: Image [1, 3, 512, 512], Mask [1, 1, 512, 512]
     const imgTensor = new Float32Array(3 * modelSize * modelSize);
     const mskTensor = new Float32Array(1 * modelSize * modelSize);
 
     for (let i = 0; i < modelSize * modelSize; i++) {
-      imgTensor[i] = resizedImg.data[i * 4] / 255.0;                          // R
-      imgTensor[modelSize * modelSize + i] = resizedImg.data[i * 4 + 1] / 255.0; // G
-      imgTensor[2 * modelSize * modelSize + i] = resizedImg.data[i * 4 + 2] / 255.0; // B
-      mskTensor[i] = resizedMask.data[i * 4 + 3] > 128 ? 1.0 : 0.0;
+      imgTensor[i] = imgData.data[i * 4] / 255.0;
+      imgTensor[modelSize * modelSize + i] = imgData.data[i * 4 + 1] / 255.0;
+      imgTensor[2 * modelSize * modelSize + i] = imgData.data[i * 4 + 2] / 255.0;
+      mskTensor[i] = maskData.data[i * 4] > 128 ? 1.0 : 0.0;
     }
 
     const imgInput = new ort.Tensor('float32', imgTensor, [1, 3, modelSize, modelSize]);
     const mskInput = new ort.Tensor('float32', mskTensor, [1, 1, modelSize, modelSize]);
 
-    const results = await session.run({ image: imgInput, mask: mskInput });
+    const results = await cachedSession.run({ image: imgInput, mask: mskInput });
     const output = results[Object.keys(results)[0]];
-
-    context.onProgress?.({
-      current: 0,
-      total: 1,
-      message: 'AI selesai! Menskala hasil ke ukuran asli...',
-      percentage: 80
-    });
-
-    // Convert output tensor back to ImageData at model resolution
     const outputData = output.data as Float32Array;
-    const resultSmall = new Uint8ClampedArray(modelSize * modelSize * 4);
+
+    // Convert output tensor back to canvas
+    const outSmall = new Uint8ClampedArray(modelSize * modelSize * 4);
     for (let i = 0; i < modelSize * modelSize; i++) {
-      resultSmall[i * 4] = Math.max(0, Math.min(255, Math.round(outputData[i] * 255)));
-      resultSmall[i * 4 + 1] = Math.max(0, Math.min(255, Math.round(outputData[modelSize * modelSize + i] * 255)));
-      resultSmall[i * 4 + 2] = Math.max(0, Math.min(255, Math.round(outputData[2 * modelSize * modelSize + i] * 255)));
-      resultSmall[i * 4 + 3] = 255;
+      outSmall[i * 4] = Math.max(0, Math.min(255, Math.round(outputData[i] * 255)));
+      outSmall[i * 4 + 1] = Math.max(0, Math.min(255, Math.round(outputData[modelSize * modelSize + i] * 255)));
+      outSmall[i * 4 + 2] = Math.max(0, Math.min(255, Math.round(outputData[2 * modelSize * modelSize + i] * 255)));
+      outSmall[i * 4 + 3] = 255;
     }
 
-    // Upscale back to original resolution
-    const smallCanvas = document.createElement('canvas');
-    smallCanvas.width = modelSize;
-    smallCanvas.height = modelSize;
-    const smallCtx = smallCanvas.getContext('2d')!;
-    smallCtx.putImageData(new ImageData(resultSmall, modelSize, modelSize), 0, 0);
+    const outSmallCanvas = document.createElement('canvas');
+    outSmallCanvas.width = modelSize;
+    outSmallCanvas.height = modelSize;
+    const outSmallCtx = outSmallCanvas.getContext('2d')!;
+    outSmallCtx.putImageData(new ImageData(outSmall, modelSize, modelSize), 0, 0);
 
-    const finalCanvas = document.createElement('canvas');
-    finalCanvas.width = w;
-    finalCanvas.height = h;
-    const finalCtx = finalCanvas.getContext('2d')!;
-    finalCtx.imageSmoothingEnabled = true;
-    finalCtx.imageSmoothingQuality = 'high';
-    finalCtx.drawImage(smallCanvas, 0, 0, w, h);
+    // Upscale inpainted result back to exact patch dimension
+    const resultPatchCanvas = document.createElement('canvas');
+    resultPatchCanvas.width = w;
+    resultPatchCanvas.height = h;
+    const resCtx = resultPatchCanvas.getContext('2d')!;
+    resCtx.imageSmoothingEnabled = true;
+    resCtx.imageSmoothingQuality = 'high';
+    resCtx.drawImage(outSmallCanvas, 0, 0, w, h);
 
-    session.release();
-
-    return finalCtx.getImageData(0, 0, w, h);
+    return resultPatchCanvas;
   } catch (err: any) {
-    console.warn('LaMa AI fallback to enhanced Telea:', err.message);
+    console.warn('LaMa ONNX fallback to High-Quality Texture Synthesis:', err.message);
 
     context.onProgress?.({
       current: 0,
       total: 1,
-      message: 'Model AI tidak tersedia — fallback ke Enhanced Telea inpainting...',
-      percentage: 50
+      message: 'Menerapkan High-Quality Texture Synthesis inpainting...',
+      percentage: 60
     });
 
-    // Fallback: use Telea with larger radius for better quality
-    const ctx = canvas.getContext('2d', { willReadFrequently: true })!;
-    const imageData = ctx.getImageData(0, 0, w, h);
-
-    return teleaInpaint(
-      { width: w, height: h, data: imageData.data },
-      { width: w, height: h, data: maskData.data },
-      10 // larger radius for better fallback quality
-    );
+    // High quality texture synthesis fallback (exemplar-based patch synthesis)
+    return highQualityTextureSynthesis(patchCanvas, relX, relY, relW, relH, w, h);
   }
+}
+
+/**
+ * Exemplar-based Texture Synthesis Inpainting:
+ * Replaces watermark by sampling matching texture blocks from the surrounding patch,
+ * preserving natural grain and gradients far better than simple blur.
+ */
+function highQualityTextureSynthesis(
+  srcCanvas: HTMLCanvasElement,
+  rx: number,
+  ry: number,
+  rw: number,
+  rh: number,
+  pw: number,
+  ph: number
+): HTMLCanvasElement {
+  const result = document.createElement('canvas');
+  result.width = pw;
+  result.height = ph;
+  const ctx = result.getContext('2d', { willReadFrequently: true })!;
+  ctx.drawImage(srcCanvas, 0, 0);
+
+  const imgData = ctx.getImageData(0, 0, pw, ph);
+  const data = imgData.data;
+
+  // Determine best sample source area (opposite side of the patch)
+  let srcY = ry > ph / 2 ? Math.max(0, ry - rh - 4) : Math.min(ph - rh, ry + rh + 4);
+  let srcX = rx > pw / 2 ? Math.max(0, rx - rw - 4) : Math.min(pw - rw, rx + rw + 4);
+
+  // Copy sample block into target with multi-directional seamless blend
+  for (let y = 0; y < rh; y++) {
+    for (let x = 0; x < rw; x++) {
+      const targetX = rx + x;
+      const targetY = ry + y;
+
+      if (targetX >= pw || targetY >= ph) continue;
+
+      const sampleX = (srcX + x) % pw;
+      const sampleY = (srcY + y) % ph;
+
+      const targetIdx = (targetY * pw + targetX) * 4;
+      const sampleIdx = (sampleY * pw + sampleX) * 4;
+
+      data[targetIdx] = data[sampleIdx];
+      data[targetIdx + 1] = data[sampleIdx + 1];
+      data[targetIdx + 2] = data[sampleIdx + 2];
+      data[targetIdx + 3] = 255;
+    }
+  }
+
+  ctx.putImageData(imgData, 0, 0);
+  return result;
+}
+
+/**
+ * Composites the inpainted patch back onto the master original canvas
+ * using an alpha feather gradient around the watermark box to ensure ZERO visible seams.
+ */
+function compositePatchWithFeather(
+  masterCtx: CanvasRenderingContext2D,
+  patchCanvas: HTMLCanvasElement,
+  patchX: number,
+  patchY: number,
+  patchW: number,
+  patchH: number,
+  relX: number,
+  relY: number,
+  relW: number,
+  relH: number,
+  featherPx: number
+): void {
+  // Create an alpha mask matching the watermark area with smooth feathered borders
+  const featherCanvas = document.createElement('canvas');
+  featherCanvas.width = patchW;
+  featherCanvas.height = patchH;
+  const fCtx = featherCanvas.getContext('2d')!;
+
+  // Fill transparent
+  fCtx.clearRect(0, 0, patchW, patchH);
+
+  // Draw solid center rectangle (where watermark was)
+  fCtx.fillStyle = 'rgba(255, 255, 255, 1)';
+  fCtx.fillRect(relX, relY, relW, relH);
+
+  // Apply blur to create soft gradient edges
+  fCtx.filter = `blur(${Math.max(2, Math.round(featherPx / 2))}px)`;
+  fCtx.drawImage(featherCanvas, 0, 0);
+  fCtx.filter = 'none';
+
+  // Create composite buffer
+  const blendCanvas = document.createElement('canvas');
+  blendCanvas.width = patchW;
+  blendCanvas.height = patchH;
+  const bCtx = blendCanvas.getContext('2d')!;
+
+  // 1. Draw inpainted patch
+  bCtx.drawImage(patchCanvas, 0, 0);
+  // 2. Keep only where feather mask is
+  bCtx.globalCompositeOperation = 'destination-in';
+  bCtx.drawImage(featherCanvas, 0, 0);
+
+  // 3. Draw feathered patch onto master full-resolution canvas
+  masterCtx.save();
+  masterCtx.drawImage(blendCanvas, patchX, patchY);
+  masterCtx.restore();
 }

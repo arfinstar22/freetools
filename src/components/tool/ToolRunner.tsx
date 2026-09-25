@@ -4,6 +4,7 @@ import { Dropzone } from '../common/Dropzone';
 import { formatBytes } from '../../utils/format';
 import { triggerDownload, triggerTextDownload } from '../../utils/download';
 import confetti from 'canvas-confetti';
+import { WatermarkEditor } from './WatermarkEditor';
 import {
   ArrowLeft,
   ShieldCheck,
@@ -232,6 +233,15 @@ export const ToolRunner: React.FC<ToolRunnerProps> = ({
                   ))}
                 </div>
               </div>
+            )}
+
+            {/* Watermark Interactive Visual Auto-Detector */}
+            {tool.id === 'remove-watermark' && files.length > 0 && (
+              <WatermarkEditor
+                file={files[0]}
+                options={options}
+                onChangeOption={handleOptionChange}
+              />
             )}
           </div>
         )}
