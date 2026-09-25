@@ -14,7 +14,7 @@ describe('Tool Registry & Integration Audit (Task 5)', () => {
   const validInputModes: ToolInputMode[] = ['file', 'multi-file', 'text', 'form', 'none'];
 
   it('Total tools count: exactly 27 tools are registered in ALL_TOOLS', () => {
-    expect(ALL_TOOLS.length).toBe(27);
+    expect(ALL_TOOLS.length).toBe(29);
   });
 
   it('Unique Tool IDs: no duplicate tool IDs exist in the registry', () => {
@@ -25,7 +25,7 @@ describe('Tool Registry & Integration Audit (Task 5)', () => {
       expect(idSet.has(tool.id)).toBe(false);
       idSet.add(tool.id);
     }
-    expect(idSet.size).toBe(27);
+    expect(idSet.size).toBe(29);
   });
 
   it('Tool Metadata Validation: all tools have valid names, descriptions, icons, and process functions', () => {
@@ -84,7 +84,7 @@ describe('Tool Registry & Integration Audit (Task 5)', () => {
     expect(pdfTools.every((t) => t.category === 'pdf')).toBe(true);
 
     const imageTools = getToolsByCategory('image');
-    expect(imageTools.length).toBe(5);
+    expect(imageTools.length).toBe(7);
     expect(imageTools.every((t) => t.category === 'image')).toBe(true);
 
     const textTools = getToolsByCategory('text');
@@ -117,7 +117,7 @@ describe('Tool Registry & Integration Audit (Task 5)', () => {
     expect(searchJson.some((t) => t.id === 'json-formatter')).toBe(true);
 
     const searchEmpty = searchTools('');
-    expect(searchEmpty.length).toBe(27);
+    expect(searchEmpty.length).toBe(29);
   });
 
   it('Option Schemas: optionSchemas when defined are valid and have defaultValue', () => {

@@ -4,7 +4,7 @@ import { PDFDocument } from 'pdf-lib';
 
 describe('Comprehensive 27 Tools Smoke Test', () => {
   it('Verify exactly 27 tools registered in Tool Registry', () => {
-    expect(ALL_TOOLS.length).toBe(27);
+    expect(ALL_TOOLS.length).toBe(29);
   });
 
   // 1. compress-pdf

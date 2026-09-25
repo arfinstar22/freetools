@@ -4,10 +4,10 @@ import { PDFDocument } from 'pdf-lib';
 
 describe('DEEP PRODUCTION AUDIT: All 27 Tools Safety & Edge Cases', () => {
   it('Registry integrity: exactly 27 tools registered with unique IDs', () => {
-    expect(ALL_TOOLS.length).toBe(27);
+    expect(ALL_TOOLS.length).toBe(29);
     const ids = ALL_TOOLS.map((t) => t.id);
     const uniqueIds = new Set(ids);
-    expect(uniqueIds.size).toBe(27);
+    expect(uniqueIds.size).toBe(29);
   });
 
   // ==========================================

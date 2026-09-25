@@ -13,6 +13,8 @@ import { imageResizeTool } from '../tools/image/image-resize';
 import { imageConvertTool } from '../tools/image/image-convert';
 import { removeMetadataTool } from '../tools/image/remove-metadata';
 import { batchImageProcessorTool } from '../tools/image/batch-image-processor';
+import { removeBackgroundTool } from '../tools/image/remove-background';
+import { removeWatermarkTool } from '../tools/image/remove-watermark';
 
 // Text Tools
 import { wordCounterTool } from '../tools/text/word-counter';
@@ -55,6 +57,8 @@ export const ALL_TOOLS: ToolDefinition[] = [
   imageConvertTool,
   removeMetadataTool,
   batchImageProcessorTool,
+  removeBackgroundTool,
+  removeWatermarkTool,
   wordCounterTool,
   textCleanerTool,
   diffCheckerTool,
@@ -76,7 +80,7 @@ export const ALL_TOOLS: ToolDefinition[] = [
 
 export const CATEGORIES: CategoryInfo[] = [
   { id: 'pdf', label: 'PDF', icon: 'FileText', description: 'Kompres, gabung, pisahkan & konversi dokumen PDF' },
-  { id: 'image', label: 'Gambar & Foto', icon: 'Image', description: 'Kompres, resize, konversi format & hapus EXIF' },
+  { id: 'image', label: 'Gambar & Foto', icon: 'Image', description: 'Kompres, resize, konversi, hapus background & watermark' },
   { id: 'text', label: 'Teks & Penulisan', icon: 'Type', description: 'Hitung kata, pembersih spasi, diff checker & format' },
   { id: 'developer', label: 'Developer Tools', icon: 'Code', description: 'JSON formatter, Base64, UUID, JWT & Regex' },
   { id: 'office', label: 'Kantor & Utilitas', icon: 'Briefcase', description: 'Invoice generator, CSV converter, split bill & tim' }
