@@ -17,7 +17,7 @@ FreeTools adalah web utility workspace gratis dan *privacy-first* untuk mengolah
 
 ---
 
-## 🛠️ Daftar Tools (27 Utilitas Siap Pakai)
+## 🛠️ Daftar Tools (29 Utilitas Siap Pakai)
 
 ### 📄 PDF (5 Tools)
 - **Kompres PDF**: Kecilkan ukuran file PDF agar mudah dikirim via WhatsApp/Email.
@@ -26,12 +26,14 @@ FreeTools adalah web utility workspace gratis dan *privacy-first* untuk mengolah
 - **Gambar ke PDF**: Konversi foto (JPG/PNG/WEBP) menjadi dokumen PDF siap cetak.
 - **PDF ke Gambar**: Render setiap halaman PDF menjadi gambar kualitas tinggi.
 
-### 🖼️ Gambar & Foto (5 Tools)
+### 🖼️ Gambar & Foto (7 Tools)
 - **Kompres Gambar**: Kecilkan ukuran JPG/PNG/WEBP dengan menjaga transparansi dan ketajaman.
 - **Ubah Ukuran (Resize)**: Atur dimensi pixel atau persentase skala foto.
 - **Ubah Format**: Konversi antar format WEBP, JPG, dan PNG.
 - **Hapus Metadata (EXIF)**: Bersihkan koordinat GPS dan identitas kamera untuk privasi.
 - **Proses Gambar Massal**: Resize, kompres, dan rename puluhan foto sekaligus menjadi 1 arsip ZIP.
+- **Hapus Background Foto**: Hapus latar belakang foto otomatis dengan AI (ISNet) — gratis, model di-cache untuk offline.
+- **Hapus Watermark Foto**: Hapus watermark/logo dari foto dengan dual-mode: Basic (Telea offline) & AI (LaMa inpainting).
 
 ### ✍️ Teks & Penulisan (6 Tools)
 - **Penghitung Kata**: Analisis jumlah kata, karakter, paragraf, dan estimasi waktu baca.
@@ -73,6 +75,7 @@ User
   ├── Tool Registry (Central Schema Manifest)
   │     ├── PDF Engine (pdf-lib, pdfjs-dist)
   │     ├── Image Engine (HTML5 Canvas 2D, Blob, WebP/JPG/PNG)
+  │     ├── AI Image Engine (ISNet Background Removal, LaMa ONNX Inpainting, Telea FMM)
   │     ├── Text Engine (diff, regex, formatters)
   │     └── Office Engine (pdf-lib, jszip, csv-parsers)
   │

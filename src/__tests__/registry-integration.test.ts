@@ -13,7 +13,7 @@ describe('Tool Registry & Integration Audit (Task 5)', () => {
   const validCategories: ToolCategory[] = ['pdf', 'image', 'text', 'developer', 'office'];
   const validInputModes: ToolInputMode[] = ['file', 'multi-file', 'text', 'form', 'none'];
 
-  it('Total tools count: exactly 27 tools are registered in ALL_TOOLS', () => {
+  it('Total tools count: exactly 29 tools are registered in ALL_TOOLS', () => {
     expect(ALL_TOOLS.length).toBe(29);
   });
 

@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { ALL_TOOLS, getToolById } from '../engine/registry';
 import { PDFDocument } from 'pdf-lib';
 
-describe('Comprehensive 27 Tools Smoke Test', () => {
-  it('Verify exactly 27 tools registered in Tool Registry', () => {
+describe('Comprehensive 29 Tools Smoke Test', () => {
+  it('Verify exactly 29 tools registered in Tool Registry', () => {
     expect(ALL_TOOLS.length).toBe(29);
   });
 
